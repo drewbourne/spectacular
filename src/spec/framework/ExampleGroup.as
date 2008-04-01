@@ -1,4 +1,4 @@
-package spec
+package spec.framework
 {
   public class ExampleGroup extends Example
   {
@@ -8,9 +8,9 @@ package spec
     public var afterEaches  : Array;
     public var afterAlls    : Array;
 
-    public function ExampleGroup(type:Class, desc:String, impl:Function)
+    public function ExampleGroup(parent:ExampleGroup, type:Class, desc:String, impl:Function)
     {
-      super(desc, impl);
+      super(parent, desc, impl);
 
       examples      = [];
       beforeAlls    = [];
@@ -26,6 +26,11 @@ package spec
     public function get type():Class
     {
       return _type;
+    }
+    
+    override public function toString():String
+    {
+      return '[ExampleGroup '+ type +':'+ desc +']';
     }
   }
 }

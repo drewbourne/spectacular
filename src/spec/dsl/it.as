@@ -4,6 +4,7 @@ package spec.dsl
   
   public function it(...rest):Example
   {
-    return null;
+    trace('SpecStaticMethods.it', rest);
+    return SpecStaticMethods.it.apply(null, rest);
   }
 }

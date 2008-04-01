@@ -1,4 +1,4 @@
-package spec
+package spec.framework
 {
   public class SpecExpectation
   {
@@ -9,7 +9,7 @@ package spec
       _args = args;
     }
     
-    //
+    // properties
     
     private var _target:*;
     
@@ -32,7 +32,7 @@ package spec
       return _matchers;
     }
     
-    //
+    // methods
 
     public function should(...rest):SpecExpectation
     {

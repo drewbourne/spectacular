@@ -1,4 +1,4 @@
-package spec
+package spec.framework
 {
   public class Spec
   {
@@ -10,21 +10,24 @@ package spec
     {
       exampleGroups = [];
       currentExampleGroup = new ExampleGroup(null, null, null);
-      exampleGroups.push(currentExampleGroup);
     }
 
-    /*
-      describe( Class, String, Function )
-      describe( Class, Function )
-      describe( String, Function )
-     */
-    public function describe(...rest):void
+    // describe( Class, String, Function )
+    // describe( Class, Function )
+    // describe( String, Function )
+    public function describe(...rest):ExampleGroup
     {
       // create an example group
       // add it to the example group
       var type:Class;
       var desc:String;
       var impl:Function;
+      
+      // allowed argument matches
+      // [Class, String, Function], function(...rest):void { return _describe(rest[0], rest[1], rest[2]); }
+      // [Class, Function], function(...rest):void { return _describe(rest[0], null, rest[1]); }
+      // [String, Function], function(...rest):void { return _describe(currentExampleGroup.type, rest[0], rest[1]); }
+      // FunctionMethods.match(patterns, rest).apply(null, rest);
 
       // match args
       if( rest.length == 3 )
@@ -45,7 +48,8 @@ package spec
         }
         else if(rest[0] is String && rest[1] is Function)
         {
-          type = currentExampleGroup.type;
+          // use the type of the current example group
+          type = currentExampleGroup ? currentExampleGroup.type : null;
           desc = rest[0] as String;
           impl = rest[1] as Function;
         }
@@ -55,48 +59,69 @@ package spec
         }
       }
 
-      _describe(type, desc, impl);
+      return _describe(type, desc, impl);
     }
-
-    private function _describe(type:Class, desc:String, impl:Function):void
+    
+    // add but dont run
+    public function xdescribe(...rest):ExampleGroup
     {
-      var eg:ExampleGroup = new ExampleGroup(type, desc, impl);
-      var previousExampleGroup:ExampleGroup = currentExampleGroup;
+      // full of fail!
+      //return _describe(type, desc, impl, {disabled: true});
+      
+      return null;
+    }
+    
+    private function _describe(type:Class, desc:String, impl:Function, options:Object = null):ExampleGroup
+    {
+      trace('_describe', type, desc, impl);
+      
+      var eg:ExampleGroup = new ExampleGroup(currentExampleGroup, type, desc, impl);
       currentExampleGroup.examples.push(eg);
+      
+      
+      /*
+      var previousExampleGroup:ExampleGroup = currentExampleGroup;
+      previousExampleGroup.examples.push(eg);
       currentExampleGroup = eg;
       currentExample = null;
-      currentExampleGroup.run();
+      // fairly iffy about this here, should be called by the runner
+      // currentExampleGroup.impl();
+      
       currentExampleGroup = previousExampleGroup;
+      */
+      
+      return eg;
     }
 
+    public function it(desc:String, impl:Function):Example
+    {
+      trace('it', desc, impl);
+      return _it(desc, impl);
+    }
+    
     // add but dont run
-    public function xdescribe(...rest):void
+    public function xit(desc:String, impl:Function):Example
     {
-
+      return _it(desc, impl, {disabled: true});
     }
-
-    public function it(desc:String, impl:Function):void
+    
+    private function _it(desc:String, impl:Function, options:Object = null):Example
     {
+      trace('_it', desc, impl);
+      
       // add an example to the currentExampleGroup
       var e:Example = new Example(desc, impl);
       var previousExample:Example = currentExample;
       currentExampleGroup.examples.push(e);
       currentExample = e;
-      currentExample.run();
-      //currentExample = previousExample;
+      // currentExample.run();
+      // currentExample = previousExample;
+      return e;
     }
 
-    // add but dont run
-    public function xit(desc:String, impl:Function):void
-    {
-
-    }
-
-    /*
-      expect(instance:Object, methodName:String, ...args)
-      expect(instanceMethod:Function, ..args)
-      expect(value)
-     */
+    // expect(instance:Object, methodName:String, ...args)
+    // expect(instanceMethod:Function, ..args)
+    // expect(value)
     public function expect(...rest):*
     {
       if( !currentExample )
@@ -129,38 +154,4 @@ package spec
       currentExampleGroup.afterAlls.push(block);
     }  
   }
-
-  /*
-  static public var specs:Array = [];
-
-  static public function add(impl:Function = null):Spec
-  {
-    var spec:Spec = new Spec();
-    specs.push(spec);
-    if(impl is Function) impl(spec);
-    return spec;
-  }
-
-  static public function get currentSpec():Spec
-  {
-    return specs.length == 0 ? add() : specs[specs.length - 1] as Spec;
-  }
-
-  static public function describe(...rest):Spec
-  {
-    currentSpec.describe.apply(null, rest);
-    return currentSpec;
-  }
-
-  static public function it(...rest):Spec
-  {
-    currentSpec.it.apply(null, rest);
-    return currentSpec;
-  }
-
-  static public function expect(...rest):SpecExpectation
-  {
-    return currentSpec.expect.apply(null, rest);
-  }
-  */  
 }

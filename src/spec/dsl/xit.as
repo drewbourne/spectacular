@@ -4,6 +4,6 @@ package spec.dsl
   
   public function xit(...rest):Example
   {
-    return null;
+    return SpecStaticMethods.xit.apply(null, rest);
   }
 }

@@ -1,15 +1,20 @@
-package spec
+package spec.framework
 {
   public class Example
   {
-    public var expectations:Array;
-    
-    public function Example(desc:String, impl:Function)
+    public function Example(parent:ExampleGroup, desc:String, impl:Function)
     {
-      expectations = [];
-      
+      _expectations = [];
+      _parent = parent;
       _desc = desc;
       _impl = impl;
+    }
+    
+    private var _parent:ExampleGroup;
+    
+    public function get parent():ExampleGroup
+    {
+      return _parent;
     }
 
     private var _desc:String;
@@ -24,6 +29,18 @@ package spec
     public function get impl():Function
     {
       return _impl;
+    }
+    
+    private var _expectations:Array;
+    
+    public function get expectations():Array 
+    {
+      return _expectations;
+    }
+    
+    public function toString():String
+    {
+      return '[Example '+ desc +']';
     }
   }
   

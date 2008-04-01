@@ -4,6 +4,6 @@ package spec.dsl
   
   public function describe(...rest):ExampleGroup
   {
-    return null;
+    return SpecStaticMethods.describe.apply(null, rest);
   }
 }
