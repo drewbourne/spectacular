@@ -3,9 +3,9 @@ package
   import flash.display.*;
   import flash.events.*;
   
-  public class flecs2 extends Sprite
+  public class flecs3 extends Sprite
   {
-    public function flecs2()
+    public function flecs3()
     {
       super();
     }
@@ -46,38 +46,116 @@ internal var spec:Object = {
     type: 'example_group'
   , description: 'specs'
   , examples: []
+  // internal state
   , asyncs: []
+  , previousExampleGroups: []
+  , pendingExamples: []
+  , currentExampleGroup: null
 };
 
 // set the initial example group to the spec object itself
 spec.currentExampleGroup = spec;
 
+// the runner of amazingness
+internal var runner:Object = {
+  run: function(spec:Object):void {
+    console.group('runner');
+    console.log('spec.examples:', spec.examples.length);
+
+    this.runExample(spec.examples[0], spec.examples.slice(1));
+  }
+  ,
+  /*
+  
+    runExample: function(example:Object, exampleGroup:Object):void {
+      
+    }
+    
+  
+   */
+  runExample: function(example:Object, remaining:Array=null):void
+  {
+    console.log('runExample', example, remaining);
+    
+    if (example.type == 'example_group') 
+    {
+      console.group('example_group');
+      console.log(example.description);
+      
+      spec.pendingExamples.push(remaining);
+      spec.currentExampleGroup = example;
+      
+      console.log('examples:', example.examples.length);
+      // describe()s & it()s run in this implementation will be added
+      // to the current example groups examples
+      example.implementation();
+      // we should now have some examples
+      console.log('examples:', example.examples.length);
+      
+      // if we dont have examples, complain a little bit as its useless 
+      // describe()ing a group with no examples
+      // if (ArrayMethods.empty(example.examples))
+      if (example.examples.length == 0)
+      {
+        console.log('whoops! did you forget to include examples?');
+      }
+      
+      // we can now run the first of the examples
+      runner.runExample(example.examples[0], example.examples.slice(1));
+    }
+    else if (example.type == 'example')
+    {
+      console.group('example');
+      console.log(example.description);
+      var asyncsBefore:Array = spec.asyncs.slice(0);
+      
+      example.implementation();
+      
+      var asyncsAfter:Array = spec.asyncs.slice(0);
+      var newAsyncs:Array = asyncsAfter.filter(function(ao:Object, i:int, a:Array):Boolean {
+        return asyncsBefore.indexOf(ao) == -1;
+      });
+      var totalFailAfterTime:Number = 0;
+      newAsyncs.forEach(function(ao:Object, i:int, a:Array):void {
+        totalFailAfterTime += ao.failAfter;
+      });
+      
+      console.log('asyncs:', newAsyncs.length, totalFailAfterTime);
+      
+      // simply wait for the total time failAfter time before running the next example
+      setTimeout(function(e:Object, remaining:Array):void {
+        console.groupEnd();
+        
+        if (remaining.length > 0)
+        {
+          runner.runExample(remaining[0], remaining.slice(1));
+        }
+        else
+        {
+          var nextExamples:Array = spec.pendingExamples.pop();
+          runner.runExample(nextExamples[0], nextExamples.slice(1));
+        }
+      }, totalFailAfterTime, remaining.shift(), remaining);
+    }
+  }
+};
+
+// setup the runner to run later
+setTimeout(function():void {
+  runner.run(spec);
+}, 1000);
+
 // spec.dsl
 internal function describe( desc:*, impl:Function ):void 
 {
-  console.group('describe');
-  
-  var current:Object = {type:'example_group', description: desc, examples: []};
-  spec.previousExampleGroup = spec.currentExampleGroup;
-  spec.previousExampleGroup.examples.push(current);
-  spec.currentExampleGroup = current;
-
-  console.log(desc);
-
-  // should wait until the previous has run
-  impl();
-
-  //trace( 'previous current', previous.examples.length, current.examples.length );
-  console.group(':');
-  console.log('(' + current.examples.length + ' examples)');
-  console.groupEnd();
-  
-  // accumulate it()s
-  // run first it()
-  // if async wait for completion
-  // else run next it() 
-  var examples:Array = current.examples.slice(0);
-  _runExample(examples.shift(), examples);
+  var exampleGroup:Object = {
+      type: 'example_group'
+    , state: 'pending'
+    , description: desc
+    , implementation: impl
+    , examples: []
+    };
+  spec.currentExampleGroup.examples.push(exampleGroup);
 }
 
 internal function _runExample(e:Object, remaining:Array):void
@@ -126,17 +204,13 @@ internal function _runExample(e:Object, remaining:Array):void
 
 internal function it( desc:String, impl:Function ):void 
 {
-  // console.group('it');
-  // console.log(desc);
-  
-  var e:Object = {type:'example', description: desc, implementation: impl};
-  //spec.examples[spec.examples.length - 1].examples.push(e);
-  spec.currentExampleGroup.examples.push(e);
-  
-  //dont run the example yet
-  //impl();
-  
-  // console.groupEnd();
+  var example:Object = {
+      type: 'example'
+    , state: 'pending'
+    , description: desc
+    , implementation: impl
+    };
+  spec.currentExampleGroup.examples.push(example);
 }
 
 // pass / fail
