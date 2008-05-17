@@ -1,7 +1,40 @@
 package spec.framework
 {
-  public interface SpecReporter
+  public class SpecReporter
   {
+    public function SpecReporter()
+    {
+      
+    }
     
+    public function startExample(example:Example):void 
+    {
+      
+    }
+    
+    public function endExample(example:Example):void
+    {
+      
+    }
+    
+    public function startExampleGroup(exampleGroup:ExampleGroup):void
+    {
+      
+    }
+    
+    public function endExampleGroup(exampleGroup:ExampleGroup):void
+    {
+      
+    }
+    
+    public function error():void 
+    {
+      
+    }
+    
+    public function failure():void
+    {
+      
+    }
   }
 }

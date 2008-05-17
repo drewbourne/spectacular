@@ -2,46 +2,61 @@ package spec.framework
 {
   public class Example
   {
-    public function Example(parent:ExampleGroup, desc:String, impl:Function)
+    private var _parent         :ExampleGroup;
+    private var _description    :String;
+    private var _implementation :Function;
+    private var _expectations   :Array;
+    private var _asyncs         :Array;
+    private var _state          :ExampleState = ExampleState.PENDING;
+    
+    public function Example(parent:ExampleGroup, description:String, implementation:Function)
     {
       _expectations = [];
+      _asyncs = [];
+      
       _parent = parent;
-      _desc = desc;
-      _impl = impl;
+      _description = description;
+      _implementation = implementation;
     }
-    
-    private var _parent:ExampleGroup;
     
     public function get parent():ExampleGroup
     {
       return _parent;
     }
-
-    private var _desc:String;
     
-    public function get desc():String
+    public function get description():String
     {
-      return _desc;
+      return _description;
     }
     
-    private var _impl:Function;
-    
-    public function get impl():Function
+    public function get implementation():Function
     {
-      return _impl;
+      return _implementation;
     }
-    
-    private var _expectations:Array;
     
     public function get expectations():Array 
     {
       return _expectations;
     }
     
+    public function get asyncs():Array
+    {
+      return _asyncs;
+    }
+    
+    public function get state():ExampleState
+    {
+      return _state;
+    }
+    
+    public function set state(state:ExampleState):void 
+    {
+      _state = state;
+    }
+    
     public function toString():String
     {
-      return '[Example '+ desc +']';
+      return '[Example '+ description +']';
     }
   }
-  
 }
