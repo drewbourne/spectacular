@@ -109,6 +109,7 @@ internal var runner:Object = {
       {
         console.log('whoops! did you forget to include examples?');
         console.groupEnd();
+        // fixme: this kills the runner
       }
       else
       {
@@ -166,7 +167,7 @@ internal var runner:Object = {
               exampleGroup = next[1];
               if(remaining.length > 0)
               {
-                // defer to break the execution stack? 
+                // defer to break the execution stack
                 setTimeout(function():void {
                   runner.runExample(remaining[0], remaining.slice(1), exampleGroup);
                 }, 10);
@@ -277,28 +278,33 @@ internal function async(func:Function, failAfter:Number):Function
 // expectation matchers
 internal function eq(expected:*):Object
 {
-  // special case for both being arrays
-  // if the values inside them are strictly equal then we consider them eq
-/*  if (expected is Array && actual is Array)
-  {
-    return expected.every(function(value:*, i:int, a:Array):Boolean {
-      return actual[i] && actual[i] === value;
+  var compareValues:Function = function(a:Object, b:Object):Boolean {
+    if (a is Array && b is Array) 
+    {
+      return compareArrays(a, b);
+    }
+    
+    return a === b;
+  };
+
+  var compareArrays:Function = function(a:Array, b:Array):Boolean {
+    return a.every(function(value:Object, i:int, a:Array):Boolean {
+      return compareValues(value, b[i]);
     });
-  }
-
-
-  var arrayEq:Function = function(a:Array, b:Array):Boolean {
-    return a.every(funn)
-  }
-*/
+  };
   
   return {
     match: (expected is Array) 
       ? function(actual:*):Boolean {
-        return false;
+          if (! actual is Array) 
+            return false;
+          return compareValues(expected, actual);
       } 
       : function(actual:*):Boolean {
-        return expected === actual;
+          // special case for NaN
+          if (isNaN(expected) && isNaN(actual)) 
+            return true;
+          return expected === actual;
       }
     ,
     successMessage: function(actual:*):String {
@@ -723,14 +729,38 @@ internal class ArrayMethods
     return memo;
   }
   
-  static public function flatten(array:Array):Array
+  static private function flattenInternal(memo:Array, value:Object):Array
   {
-    return null;
+    return memo.concat(value is Array ? flatten(value as Array) : [value]);
   }
   
-  static public function zip(...rest):Array
+  static public function flatten(array:Array):Array
   {
-    return null;
+    return inject([], array, flattenInternal) as Array;
+  }
+  
+  static public function zip(...arrays):Array
+  {
+    var arrayCount:int = arrays.length
+    if (arrayCount == 0) return [];
+    if (!arrays.every(function(value:Object, i:int, a:Array):Boolean { return value is Array; }))
+    {
+      throw new ArgumentError('ArrayMethods.zip expects all arguments to be Array');
+    }
+    
+    // find the maximum length of the arrays
+    var maxLength:Number = Math.max.apply(null, pluck(arrays, 'length'));
+    
+    var zipped:Array = [];
+    for (var i:int = 0, n:int = maxLength; i < n; i++)
+    {
+      var zipper:Array = zipped[i] = [];
+      for (var j:int = 0, m:int = arrayCount; j < m; j++)
+      {
+        zipper.push(arrays[j][i]);
+      }
+    }
+    return zipped;
   }
   
   static public function compact(array:Array):Array
@@ -743,20 +773,27 @@ internal class ArrayMethods
     return v !== null;
   }
   
+  static public function contains(array:Array, value:Object):Boolean
+  {
+    return array.indexOf(value) !== -1;
+  }
+  
   static public function unique(array:Array):Array
   {
-    return ArrayMethods.inject([], array, function(memo:Array, value:Object):Array {
-      if (!ArrayMethods.include(memo, value)) memo.push(value);
+    return inject([], array, function(memo:Array, value:Object):Array {
+      if (!contains(memo, value)) memo.push(value);
       return memo;
-    });
+    }) as Array;
   }
   
   static public function buckets(array:Array, iterator:Function):Array
   {
-    var buckets  = [];
+    var buckets:Array = [];
     array.forEach(function(value:Object, i:int, a:Array):void {
       var index:int = iterator(value);
-      (buckets[index] || (buckets[index] = [])).push(value);
+      var bucket:Array = buckets[index];
+      if (!bucket) bucket = buckets[index] = [];
+      bucket.push(value);
     });
     return buckets;
   }
@@ -769,16 +806,6 @@ internal class ArrayMethods
       (iterator(value) ? trues : falses).push(value);
     });
     return [trues, falses];
-  }
-  
-  static public function include(array:Array, ...values):Boolean
-  {
-    return array.indexOf(value) !== -1;
-    
-    // no specification
-    // return (values || []).every(function(value:Object, i:int, a:Array):Boolean {
-    //   return array.indexOf(value) !== -1;
-    // });
   }
 }
 
@@ -799,7 +826,7 @@ describe('ArrayMethods', function():void {
   
   describe('flatten', function():void {
     it('should take a nested array and return a one dimensional array', function():void {
-      expect(ArrayMethods.flatten, [1, 2, [3, 4, 5, [6], [7, 8]], 9]).to(arrayEq, [1, 2, 3, 4, 5, 6, 7, 8, 9]);
+      expect(ArrayMethods.flatten, [1, 2, [3, 4, 5, [6], [7, 8]], 9]).to(eq, [1, 2, 3, 4, 5, 6, 7, 8, 9]);
     });
   })
   
@@ -822,52 +849,57 @@ describe('ArrayMethods', function():void {
   
   describe('compact', function():void {
     it('should return an array without null values', function():void {
-      expect(ArrayMethods.compact, [null]).should(arrayEq, []);
+      expect(ArrayMethods.compact, [null]).should(eq, []);
+      expect(ArrayMethods.compact, [null, null, 3, null]).should(eq, [3]);
+      expect(ArrayMethods.compact, ['toast', 'waffles', null, 'crumpets']).should(eq, ['toast', 'waffles', 'crumpets']);
     });
   });
   
   describe('unique', function():void {
     it('should return an array without duplicate values', function():void {
-      
+      expect(ArrayMethods.unique, [1, 1, 2, 3, 5]).should(eq, [1, 2, 3, 5]);
+      expect(ArrayMethods.unique, ['one', 'two', 'two', 'two']).should(eq, ['one', 'two']);
     });
   });
   
   describe('partition', function():void {
     it('should separate values on the boolean return value of the iterator function', function():void {
-      
+      expect(ArrayMethods.partition, [1, 2, 3, 4, 5], function(value:Number):Boolean { return value > 3; }).should(eq, [[4, 5], [1, 2, 3]]);
     });
   });
   
   // bucket / distribute / ?
-  describe('bucket', function():void {
+  describe('buckets', function():void {
     it('should separate values on the return value of the iterator function', function():void {
-      
+      expect(ArrayMethods.buckets, [1, 2, 3, 4, 5, 6, 7, 8, 9], function(value:Number):int { return value % 3; }).should(eq, [[3, 6, 9], [1, 4, 7], [2, 5, 8]]);
     });    
   });
   
-  describe('include', function():void {
-    it('should be true if the array includes the value', function():void {
-      
+  describe('contains', function():void {
+    it('should be true if the array contains the value', function():void {
+      expect(ArrayMethods.contains, [], 0).should(eq, false);
+      expect(ArrayMethods.contains, [1, 2, 3], 0).should(eq, false);
+      expect(ArrayMethods.contains, [1, 2, 3], 3).should(eq, true);
     });
   });
   
   describe('naturalSort', function():void {
-    
+    it('should not be implemented yet', function():void {});
   });
   
   describe('naturalSortBy', function():void {
-    
+    it('should not be implemented yet', function():void {});
   });
 });
 
 // while/to, map/transform
 
-function unfold(seed:*, incrementor:Function, stopCondition:Function=null):Array {
+function unfold(seed:*, incrementor:Function, stopCondition:Function = null):Array {
   var result:Array = [seed];
   var x:* = incrementor(seed);
   
   // use boolean cast rules if no stop condition function given
-  if (!stopCondition) 
+  if (! (stopCondition)) 
   {
     stopCondition = function(value:*):Boolean { return value; }; 
   }
@@ -883,64 +915,98 @@ function unfold(seed:*, incrementor:Function, stopCondition:Function=null):Array
 describe('ObjectMethods', function():void {
   describe('unfold', function():void {
     it('should...', function():void {
-
       expect(unfold, 10, function(value:Number):Number { 
         return value - 2; 
       }).should(eq, [10, 8, 6, 4, 2]);
-
+      
       expect(unfold, 10, function(value:Number):Number { 
         return value - 2; 
       }, function(value:Number):Boolean {
         return value > 0;
       }).should(eq, [10, 8, 6, 4, 2]);
-
     });
   });
 });
 
-/*
-var prettifyStackTrace:Function = function(error:Error):String {
-  // prettify the stack trace
-  // todo: make pretty stack traces an option
-  var stackTrace:String = error.getStackTrace();
-  var lines:Array = stackTrace.split(/\r?\n/);      
-  
-  // remove any flexunit.framework lines
-  var prettyStack:Array = lines.filter( function(line:String, i:int, a:Array):Boolean {
-    return line.indexOf('flexunit.framework') == -1;
-  });
-  
-  // shorten the filename paths
-  var pathDepth:int = 1;
-  prettyStack = prettyStack.map( function(line:String, i:int, a:Array):String {
-    return line.replace(/\[(?P<filename>[^:]+):(?P<lineno>\d+)\]/, function( ...rest ):String {
-      var filename:String = String(rest[1]).split('/').slice( -pathDepth ).join('/');
-      var lineno:String = String(rest[2]);
-      return '[' + filename + ':' + lineno + ']';
-    });
-  });
-  return prettyStack.join('\n');
+
+internal class FunctionMethods
+{
+  static public function toIterator(iterator:Function):Function
+  {
+    return function(value:Object, i:int, a:Array):Object {
+      return iterator.apply(null, [value, i, a].slice(0, func.length));
+    };
+  }
 }
 
-// fuck it
-/*describe('StackTrace', function():void {
-  it('should be pretty', function():void {
-    var e:Error = new Error();
-    trace(e.getStackTrace());
-    
-    try {
-      var nullish:* = null;
-      nullish.unknownProperty = null;
-    }
-    catch(error:Error)
-    {
-      trace(error.getStackTrace());
-      trace(prettifyStackTrace(error));
-    }
+describe('FunctionMethods', function():void {
+  describe('iterator', function():void {
+    it('should create a function that can be used with the Array methods', function():void {
+      expect(FunctionMethods.toIterator, function():void {}).should(eq, null);
+      expect(FunctionMethods.toIterator, function(value:Object):void {}).should(eq, null);
+      expect(FunctionMethods.toIterator, function(value:Object, i:int):void {}).should(eq, null);
+      expect(FunctionMethods.toIterator, function(value:Object, i:int, a:Array):void {}).should(eq, null);
+      expect(FunctionMethods.toIterator, function(value:Object, ...rest):void {}).should(eq, null);
+      
+      // the typing saving is negligible, *sigh*
+      expect([0, 10, 20, 30].filter, FunctionMethods.toIterator(function():Boolean { 
+        return value > 10; 
+      }).should(eq, [20, 30]);
+      
+    });
   });
-  it('should have shorter filenames', function():void {
-    
-  });
-});
-*/
 
+  /*
+  describe('pipe', function():void {
+    it('should pass the result of each function to the next in the pipe', function():void {
+      
+      FunctionMethods.pipe( ArrayMethods.pluck, );
+      
+    });
+  });
+  */
+});
+
+internal class JSON
+{
+  static public function toString(value:Object):String
+  {
+    if (value == null) return 'null';
+    var type:String = (typeof value).toLowerCase();
+    switch(type)
+    {
+      case 'undefined': 
+      case 'function':
+      case 'string': 
+        return string(value as String);
+      case 'array': 
+        return array(value as Array);
+      case 'object': 
+      default: 
+        return object(value);
+    }
+  }
+  
+  static private function array(value:Array):String
+  {
+    return '[' + value.map(FunctionMethods.toIterator(Readable.toString)).join(',') + ']';
+  }
+  
+  static private function object(value:Object):String
+  {
+    var out:String = '{';
+    var fields:Array = [];
+    for (var key:String in object)
+    {
+      fields.push(Readable.toString(key) + ':' + Readable.toString(object[key]));
+    }
+    out += fields.join(', ');
+    out += '}'
+    return out;
+  }
+  
+  static private function string(value:String):String
+  {
+    return '"'+ value +'"';
+  }
+}
