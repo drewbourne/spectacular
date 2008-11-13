@@ -7,13 +7,11 @@ package spec.framework
     public var beforeEaches : Array;
     public var afterEaches  : Array;
     public var afterAlls    : Array;
-    
-    private var _type:Class;
-    
-    public function ExampleGroup(parent:ExampleGroup, type:Class, description:String, implementation:Function)
+
+    public function ExampleGroup(parent:ExampleGroup, type:Class, desc:String, impl:Function)
     {
-      super(parent, description, implementation);
-      
+      super(parent, desc, impl);
+
       examples      = [];
       beforeAlls    = [];
       beforeEaches  = [];
@@ -23,6 +21,8 @@ package spec.framework
       _type = type;
     }
     
+    private var _type:Class;
+    
     public function get type():Class
     {
       return _type;
@@ -30,7 +30,7 @@ package spec.framework
     
     override public function toString():String
     {
-      return '[ExampleGroup '+ type +':'+ description +' '+ state +']';
+      return '[ExampleGroup '+ type +':'+ desc +']';
     }
   }
 }

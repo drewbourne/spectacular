@@ -1,0 +1,38 @@
+fle(x|c)ifications
+spectacular
+specs invaders
+
+must support nested contexts
+must support asynchronous method calls and events
+must output readable results
+must allow plain language test names
+
+must allow pluggable runner
+must allow pluggable reporter
+must provide events / hooks to before, after, start describe, end describe, start it, end it
+
+
+
+when describe() is called
+  it should be added to the examples in the current example group
+  it should be set as the current example group
+  it should run if no other example group is running
+  it should be set to pending if another example group is running
+
+when it() is called
+  it should be added to the examples in the current example group
+  it should run if no other example is running
+  it should be set to pending if another example or example group is running
+
+when an example group is run
+  it should call the first pending example or example group
+  
+when an example is run
+  it should be set to running
+  it should evaluate its specifications
+  it should accumulate async data, timeouts, etc
+  it should wait until asyncs are invoked or async timeout occurs then be set to done
+
+when an example is done
+  it should call the next pending example or example group
+

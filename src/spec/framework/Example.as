@@ -56,7 +56,7 @@ package spec.framework
     
     public function toString():String
     {
-      return '[Example '+ description +']';
+      return '[Example '+ description +' '+ state +']';
     }
   }
 }
