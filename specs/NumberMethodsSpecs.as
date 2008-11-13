@@ -73,7 +73,7 @@ describe('NumberMethods', function():void {
     });
     
     it('should offset from the origin value', function():void {
-      expect(NumberMethods.snap, 1, 2, 1).should(eq, 1);
+      expect(NumberMethods.snap, 1, 2, 1).should(eq, 3);
       expect(NumberMethods.snap, 4, 4, 1).should(eq, 5); 
     });
   });

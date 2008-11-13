@@ -2,11 +2,11 @@ package spec.framework
 {
   public class ExampleGroup extends Example
   {
-    public var examples     : Array;
-    public var beforeAlls   : Array;
-    public var beforeEaches : Array;
-    public var afterEaches  : Array;
-    public var afterAlls    : Array;
+    public var examples     :Array;
+    public var beforeAlls   :Array;
+    public var befores      :Array;
+    public var afters       :Array;
+    public var afterAlls    :Array;
     
     private var _type:Class;
     
@@ -16,8 +16,8 @@ package spec.framework
       
       examples      = [];
       beforeAlls    = [];
-      beforeEaches  = [];
-      afterEaches   = [];
+      befores       = [];
+      afters        = [];
       afterAlls     = [];
       
       _type = type;

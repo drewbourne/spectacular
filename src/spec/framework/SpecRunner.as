@@ -46,20 +46,18 @@ package spec.framework
       // notify the report that we are about to start an example
       reporter.startExample(example);
     
-      // run the beforeEaches for this example, and up the parent heirarchy
+      // run the befors for this example, and up the parent heirarchy
+      // FIXME WOAH THIS IS WELL BROKEN
       /*var befores:Array = ArrayMethods.flatten(ObjectMethods.unfold(example, function(exampleGroup:ExampleGroup):Array {
-        return example.parent.beforeEaches;
+        return example.parent.befores;
       }, function(example:Example):Boolean {
         return example.parent != null;
       }));*/
     
-      // run the implementation closure to trigger expect()s & async()s
+      // run the implementation closure to trigger asyncs && assertions/expects/shoulds/matchers/what-have-you
       spec.currentExample = example;
       example.state = ExampleState.RUNNING;
       example.implementation();
-    
-      // run the afterEaches for this example, and up the parent heirarchy
-      // see beforeEaches as above
     
       // get the async()s after this example runs
       var asyncsAfter:Array = example.asyncs.slice(0);
@@ -76,7 +74,15 @@ package spec.framework
       
       setTimeout(function():void {
         example.state = ExampleState.COMPLETED;
-      
+        
+        // run the afters for this example, and up the parent heirarchy
+        // FIXME WOAH THIS IS WELL BROKEN      
+        /*var afters:Array = ArrayMethods.flatten(ObjectMethods.unfold(example.afters, function(exampleGroup:ExampleGroup):Array {
+          return example.parent.befores;
+        }, function(example:Example):Boolean {
+          return example.parent != null;
+        }));*/
+        
         // notify the report that we have finished an example
         reporter.endExample(example);
       
@@ -95,6 +101,12 @@ package spec.framework
     
       // notify the reporter that we are about to start an example group
       reporter.startExampleGroup(exampleGroup);
+      
+      // TODO run any beforeAlls for the exampleGroup
+      exampleGroup.beforeAlls.forEach(function(func:Function, i:int, a:Array):void {
+        // check arity, if 1 then we pass in the exampleGroup
+        func.apply(null, func.length == 1 ? [exampleGroup] : []);
+      });
     
       // run the implementation closure to trigger describe()s and it()s
       // new describes and its will be added to the current example group (this exampleGroup);
@@ -107,8 +119,7 @@ package spec.framework
     
       // we should now have some example in the current example group
       // we'll run them next as that seems like the least surprising thing to do.
-      // makes it a bit tricky for the implementation but meh, yay!
-      trace(exampleGroup.examples.length);
+      // trace(exampleGroup.examples.length);
       
       // shove the new examples to the top of the pending examples array
       // spec.pendingExamples.unshift.apply(spec.pendingExamples, exampleGroup.examples);
@@ -116,16 +127,11 @@ package spec.framework
       
       // run the next example
       runNext(exampleGroup);
-      
-      
-      // notify the reporter we have finished an example group
-      // this should only be triggered once all its examples & children example groups have been set to completed
-      // reporter.endExampleGroup(exampleGroup);
     }
     
     public function runNext(current:Example):void 
     {
-      trace('runNext current\n\t' + current);
+      /*trace('runNext current\n\t' + current);*/
       
       // find the first pending example
       if (current is ExampleGroup)
@@ -134,7 +140,7 @@ package spec.framework
           return example.state.equals(ExampleState.PENDING);
         });
         
-        trace('runNext pending\n\t' + pending.join('\n\t'));
+        /*trace('runNext pending\n\t' + pending.join('\n\t'));*/
         
         if (pending.length > 0)
         {
@@ -147,8 +153,16 @@ package spec.framework
       if (current.parent)
       {
         if (current is ExampleGroup) {
+          var exampleGroup:ExampleGroup = current as ExampleGroup;
+          
           // we've run out of pending examples so we notify the reporter we have finished with this example group
-          reporter.endExampleGroup(current as ExampleGroup);
+          reporter.endExampleGroup(exampleGroup);
+          
+          // TODO run any afterAlls for the exampleGroup
+          exampleGroup.afterAlls.forEach(function(func:Function, i:int, a:Array):void {
+            // check arity, if 1 then we pass in the exampleGroup
+            func.apply(null, func.length == 1 ? [exampleGroup] : []);
+          });
         }
 
         runNext(current.parent);
@@ -157,45 +171,6 @@ package spec.framework
       
       // else we are at the top of the spec heirarchy and can safely stop
       trace('done.');
-    }
-  
-    public function shitrunNext(current:Example):void 
-    {
-      // find the next pending example in the current example group
-      var pending:Array = spec.currentExampleGroup.examples.filter(function(example:Example, i:int, a:Array):Boolean {
-        return example.state.equals(ExampleState.PENDING);
-      });
-      
-      trace ('pending', pending);
-      
-      if (pending.length == 0)
-      {
-        spec.currentExampleGroup.state = ExampleState.COMPLETED;
-      }
-      
-      var next:Example = pending.shift();
-
-      // if we've got a pending example run it
-      if (next)
-      {
-        run(next);
-        return;
-      }
-      
-      // else find the previous example group, if it has pending examples, run the first pending example
-      var pendingGroups:Array = spec.previousExampleGroups.filter(function(example:Example, i:int, a:Array):Boolean {
-        return example.state.equals(ExampleState.PENDING);
-      });
-      
-      trace('pendingGroups', pendingGroups);
-      
-      var nextGroup:ExampleGroup = pendingGroups.shift();
-      
-      /*spec.currentExampleGroup = spec.previousExampleGroups.filter(function(example:Example, i:int, a:Array):Boolean {
-        return example.state.equals(ExampleState.PENDING);
-      }).shift();
-      
-      runNext();*/
     }
   }
 }

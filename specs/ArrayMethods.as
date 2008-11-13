@@ -4,9 +4,10 @@ package
   {
     static public function pluck(array:Array, field:String):Array
     {
-      return array.map(function(value:Object, i:int, a:Array):Object {
+      var result:Array = array.map(function(value:Object, i:int, a:Array):Object {
         return value.hasOwnProperty(field) ? value[field] : null;
       });
+      return result;
     }
 
     static public function inject(memo:Object, array:Array, iterator:Function):Object
@@ -15,6 +16,23 @@ package
         memo = iterator(memo, value);
       });
       return memo;
+    }
+    
+    // state        initial state
+    // predicate    tests the state to know when to stop
+    // transformer  converts the state to an output value
+    // incrementor  converts the state to the next state
+    static public function unfold(initial:Object, predicate:Function, transformer:Function, incrementor:Function):Array {
+      
+      var result:Array = [];
+      var state:Object = initial;
+      
+      do {
+        result.push(transformer(state));
+        state = incrementor(state);
+      } while (predicate(state))
+      
+      return result;
     }
 
     static private function flattenInternal(memo:Array, value:Object):Array
@@ -26,12 +44,22 @@ package
     {
       return inject([], array, flattenInternal) as Array;
     }
+    
+    static private function isArray(value:Object, i:int=0, a:Array=null):Boolean 
+    { 
+      return value is Array; 
+    }
 
     static public function zip(...arrays):Array
     {
       var arrayCount:int = arrays.length
-      if (arrayCount == 0) return [];
-      if (!arrays.every(function(value:Object, i:int, a:Array):Boolean { return value is Array; }))
+      
+      if (arrayCount == 0) 
+      {
+        return [];
+      } 
+      
+      if (!arrays.every(isArray))
       {
         throw new ArgumentError('ArrayMethods.zip expects all arguments to be Array');
       }
@@ -53,10 +81,10 @@ package
 
     static public function compact(array:Array):Array
     {
-      return array.filter(notNullIterator);
+      return array.filter(notNull);
     }
 
-    static private function notNullIterator(v:Object, i:int, a:Array):Boolean
+    static private function notNull(v:Object, i:int=0, a:Array=null):Boolean
     {
       return v !== null;
     }
@@ -66,12 +94,18 @@ package
       return array.indexOf(value) !== -1;
     }
 
+    static private function uniqueInternal(memo:Array, value:Object):Array 
+    {
+      if (!contains(memo, value)) 
+      {
+        memo.push(value);
+      }
+      return memo;
+    }
+
     static public function unique(array:Array):Array
     {
-      return inject([], array, function(memo:Array, value:Object):Array {
-        if (!contains(memo, value)) memo.push(value);
-        return memo;
-      }) as Array;
+      return inject([], array, uniqueInternal) as Array;
     }
 
     static public function buckets(array:Array, iterator:Function):Array

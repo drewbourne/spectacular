@@ -29,13 +29,9 @@ internal var console:Object = {
     //var args:Array = [StringMethods.repeat(' ', (this.groups.length - 1) * 2), group].concat(rest);
     var out:String = StringMethods.repeat(' ', (this.groups.length - 1) * 2) + [group].concat(rest).join(' ');
     trace(out);
-    //trace.apply(null, args);
-    //trace.apply(null, this.groups);
   }
   ,
   group: function(name:String):void {
-    //trace(this.groups.length, name, this.groups[this.groups.length - 1]);
-    //if(this.groups[this.groups.length - 1] != name);
     this.groups.push(name);
   }
   ,
@@ -50,7 +46,7 @@ internal var spec:Spec = new Spec();
 // set the initial example group to the spec object itself
 spec.currentExampleGroup = spec;
 
-internal var runner:SpecRunner = new SpecRunner(spec, new SpecReporter());
+internal var runner:SpecRunner = new SpecRunner(spec, new TraceSpecReporter());
 
 // setup the runner to run later
 setTimeout(function():void {
@@ -60,14 +56,12 @@ setTimeout(function():void {
 // spec.dsl
 internal function describe(description:*, implementation:Function):void 
 {
-  var exampleGroup:ExampleGroup = new ExampleGroup(spec.currentExampleGroup, null, description, implementation);
-  spec.currentExampleGroup.examples.push(exampleGroup);
+  spec.addExampleGroup(null, description, implementation);
 }
 
 internal function it(description:String, implementation:Function):void 
 {
-  var example:Example = new Example(spec.currentExampleGroup, description, implementation);
-  spec.currentExampleGroup.examples.push(example);
+  spec.addExample(description, implementation);
 }
 
 // pass / fail
@@ -79,9 +73,11 @@ internal function pass(message:String = null):void
 internal function fail(message:String = null):void
 {
   console.log('failed!', message || '');
+  
+  var error:Error = new Error();
+  var stack:Array = error.getStackTrace().split('\n');
+  trace(stack.join('\n'));
 }
-
-// 
 
 internal function async(func:Function, failAfter:Number):Function 
 {
@@ -89,7 +85,7 @@ internal function async(func:Function, failAfter:Number):Function
   
   var failTimeout:int = setTimeout(function():void {
     // should get the description from the it() this was called within
-    fail('async not called');
+    fail('async not called: ' + spec.currentExample.description);
     //spec.asyncs.splice(spec.asyncs.indexOf(asyncDetails), 1);
   }, failAfter);
   
@@ -103,6 +99,8 @@ internal function async(func:Function, failAfter:Number):Function
   };
 }
 
+// TODO replace with flexunit Assert, Hamcrest matchers, or whatever
+// TODO separate the assertion framework from the test unit wrappers
 // expectation matchers
 internal function eq(expected:*):Object
 {
@@ -149,12 +147,6 @@ internal function eq(expected:*):Object
   };
 }
 
-/*
-internal var expectationMatchers:Object = {
-  '===': eq
-};
-*/
-
 // parameters are the method and parameter result
 internal function expect( ...rest ):Object 
 {
@@ -197,14 +189,10 @@ internal function expect( ...rest ):Object
       var actual:* = evaluateActual();
       var passed:Boolean = evaluateMatcher.match(actual);
       
-      // console.group('should');
-      // if (actual is String) actual = "\""+ actual +"\"";
-      // if (expected is String) expected = "\""+ expected +"\"";
-      
       if(!passed)
       {
         console.group('failed');
-        console.log('args:', actualArgs, ', result:', actual, ', expected:', expectedArgs);
+        console.log('args:', actualArgs.slice(1), ', result:', actual, ', expected:', expectedArgs.slice(1));
         console.log(evaluateMatcher.failureMessage(actual));
         console.groupEnd();
         
@@ -213,7 +201,7 @@ internal function expect( ...rest ):Object
       else if(negative && passed)
       {
         console.group('failed');
-        console.log('args:', actualArgs, ', result:', actual, ', expected:', expectedArgs);
+        console.log('args:', actualArgs.slice(1), ', result:', actual, ', expected:', expectedArgs.slice(1));
         console.log(evaluateMatcher.negativeFailureMessage(actual));
         console.groupEnd();
         
@@ -251,164 +239,9 @@ internal function expect( ...rest ):Object
   };
 }
 
-// async demo
-import flash.events.*;
-
-describe('Async Example', function():void {
-  var ed:EventDispatcher = new EventDispatcher();
-  
-  it('should wait before running next example', function():void {
-    var later:Function = async(function():void {
-      console.log('async example, should wait until this is done');
-    }, 100);
-    
-    setTimeout(function():void {
-      later();
-    }, 50);
-  });
-  
-  it('should pass if async function is called', function():void {
-    ed.addEventListener('example', async(function(e:Event):void {
-      console.log('async example, should pass, this trace should be called');
-    }, 1000));
-    
-    setTimeout(function():void {
-      ed.dispatchEvent(new Event('example'));
-    }, 50);
-  });
-  
-  it('should fail if async function is not called', function():void {
-    async(function():void {
-      console.log('it should fail if this function is not called');
-    }, 100);
-  });
-  
-  it('should allow multiple async functions to be pending', function():void {
-    ed.addEventListener('multi_async_1', async(function(e:Event):void {
-      console.log('multi_async_1');
-    }, 100));
-    ed.addEventListener('multi_async_2', async(function(e:Event):void {
-      console.log('multi_async_2');
-    }, 200));
-    ed.addEventListener('multi_async_3', async(function(e:Event):void {
-      console.log('multi_async_3');
-    }, 300));
-    
-    setTimeout(function():void {
-      ed.dispatchEvent(new Event('multi_async_1'));
-      setTimeout(function():void {
-        ed.dispatchEvent(new Event('multi_async_2'));
-        setTimeout(function():void {
-          ed.dispatchEvent(new Event('multi_async_3'));
-        }, 50);
-      }, 50);
-    }, 50);
-  });
-});
-
-// StringMethods
-internal class StringMethods
-{
-  static public function repeat(value:String, count:Number = 1):String
-  {
-    var out:String = '';
-    while(count > 0){ out += value; --count; }
-    return out;
-  }
-  
-  static public function padLeft(value:String, length:Number = 1, pad:String = ' '):String
-  {
-    if (length < value.length) 
-      return value.substring(0, length);
-    
-    var padLength:Number = length - value.length;
-    var padRepeat:Number = Math.ceil(padLength / pad.length);
-    var padding:String = StringMethods.repeat(pad, padRepeat).slice(-padLength);
-    
-    return padding + value;
-  }
-  
-  static public function padRight(value:String, length:Number = 1, pad:String = ' '):String
-  {
-    if (length < value.length)
-      return value.substring(0, length);
-    
-    var out:String = value;
-    var padLength:Number = length - value.length;
-    var padRepeat:Number = Math.ceil(padLength / pad.length);
-    var padding:String = StringMethods.repeat(pad, padRepeat).slice(0, padLength);
-    
-    return value + padding;
-  }
-}
-
-describe('StringMethods', function():void {
-  describe('repeat', function():void {
-    it('should repeat the given string the given number of times', function():void {
-      expect(StringMethods.repeat, '', 0).should(eq, '');
-      expect(StringMethods.repeat, '', 1).should(eq, '');
-      expect(StringMethods.repeat, ' ', 0).should(eq, '');
-      expect(StringMethods.repeat, ' ', 1).should(eq, ' ');
-      expect(StringMethods.repeat, ' ', 2).should(eq, '  ');
-      expect(StringMethods.repeat, '-+', 2).should(eq, '-+-+');
-    });
-  });
-  
-  describe('padLeft', function():void {
-    it('should add the specified amount of padding from the pad string to the left side of the given value string', function():void {
-      expect(StringMethods.padLeft, 'hello', 10).should(eq, '     hello');
-      expect(StringMethods.padLeft, 'hello', 10, '-+(').should(eq, '+(-+(hello');
-    });
-  });
-  
-  describe('padRight', function():void {
-    it('should add the specified amount of padding from the pad string to the right side of the given value string', function():void {
-      expect(StringMethods.padRight, 'hello', 10).should(eq, 'hello     ');
-      expect(StringMethods.padRight, 'hello', 10, ')+-').should(eq, 'hello)+-)+');
-    });
-  });
-});
-
-internal class JSON
-{
-  static public function toString(value:Object):String
-  {
-    if (value == null) return 'null';
-    var type:String = (typeof value).toLowerCase();
-    switch(type)
-    {
-      case 'undefined': 
-      case 'function':
-      case 'string': 
-        return string(value as String);
-      case 'array': 
-        return array(value as Array);
-      case 'object': 
-      default: 
-        return object(value);
-    }
-  }
-  
-  static private function array(value:Array):String
-  {
-    return '[' + value.map(FunctionMethods.toIterator(JSON.toString)).join(',') + ']';
-  }
-  
-  static private function object(value:Object):String
-  {
-    var out:String = '{';
-    var fields:Array = [];
-    for (var key:String in object)
-    {
-      fields.push(JSON.toString(key) + ':' + JSON.toString(object[key]));
-    }
-    out += fields.join(', ');
-    out += '}'
-    return out;
-  }
-  
-  static private function string(value:String):String
-  {
-    return '"'+ value +'"';
-  }
-}
+/*include 'SpecsAsyncSpecs.as'*/
+include 'ArrayMethodsSpecs.as'
+/*include 'FunctionMethodsSpecs.as'*/
+/*include 'NumberMethodsSpecs.as'*/
+/*include 'ObjectMethodsSpecs.as'*/
+/*include 'StringMethodsSpecs.as'*/
