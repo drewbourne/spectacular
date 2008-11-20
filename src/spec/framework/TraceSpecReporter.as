@@ -2,7 +2,7 @@ package spec.framework
 {
   public class TraceSpecReporter implements SpecReporter
   {
-    private var _nest:int = 0;
+    private var _nest:int = -1;
     
     public function TraceSpecReporter()
     {
@@ -12,7 +12,7 @@ package spec.framework
     public function startExample(example:Example):void 
     {
       _nest++;
-      var out:String = StringMethods.repeat(' ', _nest) + example.description;
+      var out:String = StringMethods.repeat('  ', _nest) + example.description;
       trace(out);
     }
     
@@ -24,7 +24,7 @@ package spec.framework
     public function startExampleGroup(exampleGroup:ExampleGroup):void
     {
       _nest++;
-      var out:String = StringMethods.repeat(' ', _nest) + exampleGroup.description;
+      var out:String = StringMethods.repeat('  ', _nest) + exampleGroup.description;
       trace(out);
     }
     

@@ -19,6 +19,11 @@ package spec.framework
       _implementation = implementation;
     }
     
+    public function toString():String
+    {
+      return '[Example '+ description +' '+ state +']';
+    }
+    
     public function get parent():ExampleGroup
     {
       return _parent;
@@ -53,10 +58,10 @@ package spec.framework
     {
       _state = state;
     }
-    
-    public function toString():String
+ 
+    public function addAsync(asyncDetails:Object):void
     {
-      return '[Example '+ description +' '+ state +']';
+      asyncs.push(asyncDetails);
     }
   }
 }

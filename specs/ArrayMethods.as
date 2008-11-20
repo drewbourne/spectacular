@@ -129,5 +129,26 @@ package
       });
       return [trues, falses];
     }
+    
+    static public function find(array:Array, iterator:Function):Object 
+    {
+      var result:Object = null;
+      var item:Object = null;
+      
+      // TODO: is this safe? in that it does not experience the same issues as enumerable properties in javascript
+      // for each (var o in array) { ... }
+      
+      // FIXME do we really want to iterate over every element in sparse arrays?
+      for (var i:int = 0, n:int = array.length; i < n; i++) 
+      {
+        item = array[i];
+        if (iterator(item, i, array)) {
+          result = item;
+          break;
+        }
+      }
+      
+      return result;
+    }
   }
 }

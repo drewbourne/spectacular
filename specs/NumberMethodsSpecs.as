@@ -91,4 +91,14 @@ describe('NumberMethods', function():void {
       
     });
   });
+  
+  describe('sum', function():void {
+    it('should add all the values together', function():void {
+      
+      var values:Array = [1, 2, 3, 4, 5];
+      expect(NumberMethods.sum, values).to(eq, 15);
+      
+      /*assertThat(NumberMethods.sum(values), eq(15));*/
+    });
+  });
 });
