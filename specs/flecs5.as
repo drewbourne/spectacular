@@ -35,3 +35,19 @@ include 'ArrayMethodsSpecs.as'
 /*include 'NumberMethodsSpecs.as'*/
 /*include 'ObjectMethodsSpecs.as'*/
 /*include 'StringMethodsSpecs.as'*/
+
+describe('StringTable', function():void {
+  it('should be awesome', function():void {
+    
+    var fields:Array = ['Total Example Groups', 'Total Examples', 'Failures'];
+    var fieldLengths:Array = ArrayMethods.pluck(fields, 'length');
+    var max:Number = Math.max.apply(null, fieldLengths);
+    
+    var table:Array = (fields.map(function(field:String, i:int, a:Array):String {
+      return StringMethods.padLeft(field, max);
+    }));
+    
+    trace(table.join('\n'));
+    
+  });
+});

@@ -56,17 +56,12 @@ package spec.framework
       return spec.addAsync(fn, failAfter);
     }
     
+    // TODO separate the statics and the Spec impl into different classes
+    
     private var _currentExampleGroup:ExampleGroup;
     private var _currentExample:Example;
     private var _pendingExamples:Array;
     private var _previousExampleGroups:Array;
-    
-    public function Spec()
-    {
-      _pendingExamples = [];
-      _previousExampleGroups = [];
-      _currentExampleGroup = new ExampleGroup(null, null, 'root', null);
-    }
     
     public var results:Object = {
       exampleGroupCount: 0
@@ -74,6 +69,13 @@ package spec.framework
     , passedCount: 0
     , failedCount: 0
     };
+    
+    public function Spec()
+    {
+      _pendingExamples = [];
+      _previousExampleGroups = [];
+      _currentExampleGroup = new ExampleGroup(null, null, 'root', null);
+    }
     
     public function get currentExampleGroup():ExampleGroup 
     {

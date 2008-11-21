@@ -2,6 +2,10 @@ package spec.framework
 {
   public interface SpecReporter
   {
+    function start():void;
+    
+    function end():void;
+    
     function startExample(example:Example):void;
 
     function endExample(example:Example):void;
@@ -10,8 +14,6 @@ package spec.framework
 
     function endExampleGroup(exampleGroup:ExampleGroup):void;
 
-    function error():void;
-
-    function failure():void;
+    function failure(cause:Error):void;
   }
 }

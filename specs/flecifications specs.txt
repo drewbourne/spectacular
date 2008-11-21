@@ -10,8 +10,11 @@ must allow plain language test names
 must allow pluggable runner
 must allow pluggable reporter
 must provide events / hooks to before, after, start describe, end describe, start it, end it
+must provide stack trace filter to remove irrelevant portions of the file path
 
+should provide an integration layer to flexunit
 
+-- describe, it
 
 when describe() is called
   it should be added to the examples in the current example group
@@ -35,4 +38,24 @@ when an example is run
 
 when an example is done
   it should call the next pending example or example group
+
+-- given, when, then
+
+when #given is called
+  it should add the block to an examples preconditions
+
+when #given is called, and then #and
+  it should add the block to an examples preconditions
+
+when #when is called
+  it should add the block to an examples (event conditions | conditions | transition)
+
+when #when is called, and then #and
+  it should add the block to an examples (event conditions | conditions | transition)
+
+when #then is called
+  it should add the block to an examples assertions
+
+when #then is called, and then #and
+  it should add the block to an examples assertions
 

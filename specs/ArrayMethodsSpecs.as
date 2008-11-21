@@ -80,7 +80,9 @@ describe('ArrayMethods', function():void {
   describe('partition', function():void {
     it('should separate values on the boolean return value of the iterator function', function():void {
       
-      assertThat(ArrayMethods.partition([1, 2, 3, 4, 5], function(value:Number):Boolean { return value >3 }), 
+      var greaterThan3:Function = function(value:Number):Boolean { return value >3 };
+      
+      assertThat(ArrayMethods.partition([1, 2, 3, 4, 5], greaterThan3), 
                  equalTo([[4, 5], [1, 2, 3]]));
     });
   });
@@ -89,13 +91,16 @@ describe('ArrayMethods', function():void {
   describe('buckets', function():void {
     it('should separate values on the return value of the iterator function', function():void {
       
-      assertThat(ArrayMethods.buckets([1, 2, 3, 4, 5, 6, 7, 8, 9], function(value:Number):int { return value % 3; }),
+      var mod3:Function = function(value:Number):int { return value % 3; };
+      
+      assertThat(ArrayMethods.buckets([1, 2, 3, 4, 5, 6, 7, 8, 9], mod3),
                  equalTo([[3, 6, 9], [1, 4, 7], [2, 5, 8]]));
     });    
   });
 
   describe('contains', function():void {
     it('should be true if the array contains the value', function():void {
+      
       assertThat(ArrayMethods.contains([], 0), equalTo(false));
       assertThat(ArrayMethods.contains([1, 2, 3], 0), equalTo(false));
       assertThat(ArrayMethods.contains([1, 2, 3], 3), equalTo(true));

@@ -6,11 +6,13 @@ package spec.framework
   {
     private var _spec:Spec;
     private var _reporter:SpecReporter;
+    private var _running:Boolean;
 
     public function SpecRunner(spec:Spec, reporter:SpecReporter)
     {
       _spec = spec;
       _reporter = reporter;
+      _running = false;
     }
     
     public function get spec():Spec
@@ -25,6 +27,11 @@ package spec.framework
   
     public function run(example:Example):void
     {
+      if (!_running) {
+        _running = true;
+        reporter.start();
+      }
+      
       // check if it is a Spec
       // check if it is an ExampleGroup
       // check if it is an Example
@@ -57,7 +64,12 @@ package spec.framework
       // run the implementation closure to trigger asyncs && assertions/expects/shoulds/matchers/what-have-you
       spec.currentExample = example;
       example.state = ExampleState.RUNNING;
-      example.implementation();
+      
+      try {
+        example.implementation();
+      } catch (error:Error) {
+        reporter.failure(error);
+      }
     
       // get the async()s after this example runs
       var asyncsAfter:Array = example.asyncs.slice(0);
@@ -170,7 +182,7 @@ package spec.framework
       }
       
       // else we are at the top of the spec heirarchy and can safely stop
-      trace('done.');
+      reporter.end();
     }
   }
 }
