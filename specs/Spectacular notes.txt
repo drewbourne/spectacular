@@ -1,0 +1,59 @@
+Spectacular
+
+must support nested contexts
+must support asynchronous method calls and events
+must output readable results
+must allow plain language test names
+
+must allow pluggable runner
+must allow pluggable reporter
+must provide events / hooks to before, after, start describe, end describe, start it, end it
+must provide stack trace filter to remove irrelevant portions of the file path
+
+should provide an integration layer to flexunit
+
+-- describe, it
+
+when describe() is called
+  it should be added to the examples in the current example group
+  it should be set as the current example group
+  it should run if no other example group is running
+  it should be set to pending if another example group is running
+
+when it() is called
+  it should be added to the examples in the current example group
+  it should run if no other example is running
+  it should be set to pending if another example or example group is running
+
+when an example group is run
+  it should call the first pending example or example group
+  
+when an example is run
+  it should be set to running
+  it should evaluate its specifications
+  it should accumulate async data, timeouts, etc
+  it should wait until asyncs are invoked or async timeout occurs then be set to done
+
+when an example is done
+  it should call the next pending example or example group
+
+-- given, when, then
+
+when #given is called
+  it should add the block to an examples preconditions
+
+when #given is called, and then #and
+  it should add the block to an examples preconditions
+
+when #when is called
+  it should add the block to an examples (event conditions | conditions | transition)
+
+when #when is called, and then #and
+  it should add the block to an examples (event conditions | conditions | transition)
+
+when #then is called
+  it should add the block to an examples assertions
+
+when #then is called, and then #and
+  it should add the block to an examples assertions
+
