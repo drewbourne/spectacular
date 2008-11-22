@@ -1,6 +1,6 @@
-package spec.dsl
+package spectacular.dsl
 {
-  import spec.framework.*;
+  import spectacular.framework.Spec;
   
   public function afterAll(func:Function):void 
   {

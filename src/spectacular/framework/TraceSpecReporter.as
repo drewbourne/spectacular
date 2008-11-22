@@ -1,4 +1,4 @@
-package spec.framework
+package spectacular.framework
 {
   public class TraceSpecReporter implements SpecReporter
   {
@@ -19,7 +19,7 @@ package spec.framework
     
     public function end():void 
     {
-      trace('Done');
+      trace('\nDone');
       trace('\tTotal Example Groups:', _exampleGroupCount);
       trace('\tTotal Examples:', _exampleCount);
       trace('\tFailures:', _failures.length);
@@ -29,7 +29,7 @@ package spec.framework
     {
       _nest++;
       _exampleCount++;
-      var out:String = StringMethods.repeat('  ', _nest) + example.description;
+      var out:String = repeat('  ', _nest) + example.description;
       trace(out);
     }
     
@@ -42,7 +42,7 @@ package spec.framework
     {
       _nest++;
       _exampleGroupCount++;
-      var out:String = StringMethods.repeat('  ', _nest) + exampleGroup.description;
+      var out:String = repeat('  ', _nest) + exampleGroup.description;
       trace(out);
     }
     
@@ -57,4 +57,11 @@ package spec.framework
       trace(cause.getStackTrace());
     }
   }
+}
+
+internal function repeat(value:String, count:Number = 1):String {
+  
+  var out:String = '';
+  while(count > 0){ out += value; --count; }
+  return out;
 }

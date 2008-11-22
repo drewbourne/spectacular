@@ -1,4 +1,4 @@
-package spec.framework
+package spectacular.framework
 {
   public class Example
   {
@@ -62,6 +62,21 @@ package spec.framework
     public function addAsync(asyncDetails:Object):void
     {
       asyncs.push(asyncDetails);
+    }
+    
+    public function get isPending():Boolean {
+      
+      return ExampleState.PENDING.equals(state);
+    }
+    
+    public function get isRunning():Boolean {
+      
+      return ExampleState.RUNNING.equals(state);
+    }
+    
+    public function get isCompleted():Boolean {
+      
+      return ExampleState.COMPLETED.equals(state);
     }
   }
 }

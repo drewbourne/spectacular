@@ -1,14 +1,14 @@
-package spec.framework
+package spectacular.framework
 {
   import flash.utils.*;
   
-  public class SpecRunner
+  public class BaseSpecRunner implements SpecRunner
   {
     private var _spec:Spec;
     private var _reporter:SpecReporter;
     private var _running:Boolean;
 
-    public function SpecRunner(spec:Spec, reporter:SpecReporter)
+    public function BaseSpecRunner(spec:Spec, reporter:SpecReporter)
     {
       _spec = spec;
       _reporter = reporter;
@@ -32,7 +32,6 @@ package spec.framework
         reporter.start();
       }
       
-      // check if it is a Spec
       // check if it is an ExampleGroup
       // check if it is an Example
       if (example is ExampleGroup)
@@ -45,7 +44,7 @@ package spec.framework
       }
     }
   
-    public function runExample(example:Example):void
+    protected function runExample(example:Example):void
     {
       // get the async()s before this example runs
       var asyncsBefore:Array = example.asyncs.slice(0);
@@ -53,14 +52,9 @@ package spec.framework
       // notify the report that we are about to start an example
       reporter.startExample(example);
     
-      // run the befors for this example, and up the parent heirarchy
-      // FIXME WOAH THIS IS WELL BROKEN
-      /*var befores:Array = ArrayMethods.flatten(ObjectMethods.unfold(example, function(exampleGroup:ExampleGroup):Array {
-        return example.parent.befores;
-      }, function(example:Example):Boolean {
-        return example.parent != null;
-      }));*/
-    
+      // run the befores for this example, and up the parent heirarchy
+      runBefores(example.parent);
+
       // run the implementation closure to trigger asyncs && assertions/expects/shoulds/matchers/what-have-you
       spec.currentExample = example;
       example.state = ExampleState.RUNNING;
@@ -84,16 +78,16 @@ package spec.framework
         totalAsyncTime += async.failAfter;
       });
       
+      // wait till any asyncs have been run, then continue
       setTimeout(function():void {
+        
+        // TODO complain if any of the asyncs failed to be called
+        // TODO flag example as state == FAILED if it failed for any reason
+        
         example.state = ExampleState.COMPLETED;
         
         // run the afters for this example, and up the parent heirarchy
-        // FIXME WOAH THIS IS WELL BROKEN      
-        /*var afters:Array = ArrayMethods.flatten(ObjectMethods.unfold(example.afters, function(exampleGroup:ExampleGroup):Array {
-          return example.parent.befores;
-        }, function(example:Example):Boolean {
-          return example.parent != null;
-        }));*/
+        runAfters(example.parent);
         
         // notify the report that we have finished an example
         reporter.endExample(example);
@@ -102,23 +96,19 @@ package spec.framework
       }, totalAsyncTime);
     }
   
-    public function runExampleGroup(exampleGroup:ExampleGroup):void
+    protected function runExampleGroup(exampleGroup:ExampleGroup):void
     {
       // shove any pending examples / example groups somewhere
       // because we want to be able to return to them later
-    
-      // set this exampleGroup as the current example group
       spec.previousExampleGroups.push(spec.currentExampleGroup);
+          
+      // set this exampleGroup as the current example group
       spec.currentExampleGroup = exampleGroup;
     
       // notify the reporter that we are about to start an example group
       reporter.startExampleGroup(exampleGroup);
       
-      // TODO run any beforeAlls for the exampleGroup
-      exampleGroup.beforeAlls.forEach(function(func:Function, i:int, a:Array):void {
-        // check arity, if 1 then we pass in the exampleGroup
-        func.apply(null, func.length == 1 ? [exampleGroup] : []);
-      });
+      runBeforeAlls(exampleGroup);
     
       // run the implementation closure to trigger describe()s and it()s
       // new describes and its will be added to the current example group (this exampleGroup);
@@ -141,22 +131,20 @@ package spec.framework
       runNext(exampleGroup);
     }
     
-    public function runNext(current:Example):void 
+    protected function runNext(current:Example):void 
     {
-      /*trace('runNext current\n\t' + current);*/
-      
       // find the first pending example
       if (current is ExampleGroup)
       {
-        var pending:Array = (current as ExampleGroup).examples.filter(function(example:Example, i:int, a:Array):Boolean {
-          return example.state.equals(ExampleState.PENDING);
-        });
-        
-        /*trace('runNext pending\n\t' + pending.join('\n\t'));*/
+        var pending:Array = (current as ExampleGroup).pendingExamples;
         
         if (pending.length > 0)
         {
-          run(pending.shift());
+          // setTimeout is used here to break recursive call chains avoiding deep recursion errors
+          setTimeout(function():void {
+            run(pending.shift());
+          }, 10);
+          
           return;
         }
       }
@@ -164,25 +152,68 @@ package spec.framework
       // else if its an example, check its parents
       if (current.parent)
       {
+        // example group is complete now so perform clean up operations
         if (current is ExampleGroup) {
           var exampleGroup:ExampleGroup = current as ExampleGroup;
           
           // we've run out of pending examples so we notify the reporter we have finished with this example group
           reporter.endExampleGroup(exampleGroup);
           
-          // TODO run any afterAlls for the exampleGroup
-          exampleGroup.afterAlls.forEach(function(func:Function, i:int, a:Array):void {
-            // check arity, if 1 then we pass in the exampleGroup
-            func.apply(null, func.length == 1 ? [exampleGroup] : []);
-          });
+          runAfterAlls(exampleGroup);
         }
 
         runNext(current.parent);
         return;
       }
       
-      // else we are at the top of the spec heirarchy and can safely stop
+      // else we are at the top of the spec hierarchy and can safely stop
       reporter.end();
+    }
+    
+    /**
+     * @private 
+     */
+    protected function invokeFunctionWithArgsIfArityMatches(...rest):Function {
+      
+      return function(fn:Function, i:int, a:Array):void {
+        try {
+          fn.apply(null, rest && fn.length == rest.length ? rest : []);
+        } catch (error:Error) {
+          reporter.failure(error);
+        }
+      };
+    }
+    
+    // TODO check what the least-surprising thing is regarding order of running beforeAlls
+    protected function runBeforeAlls(exampleGroup:ExampleGroup):void {
+      
+      exampleGroup.beforeAlls.forEach(invokeFunctionWithArgsIfArityMatches(exampleGroup));
+    }
+    
+    // TODO check what the least-surprising thing is regarding order of running befores, it should probably run outside-in
+    protected function runBefores(exampleGroup:ExampleGroup):void {
+      
+      exampleGroup.befores.forEach(invokeFunctionWithArgsIfArityMatches(exampleGroup));
+      
+      if (exampleGroup.parent) {
+        runBefores(exampleGroup.parent);
+      }
+    }
+    
+    // TODO check what the least-surprising thing is regarding order of running afters, it should probabaly run inside-out
+    protected function runAfters(exampleGroup:ExampleGroup):void {
+      
+      exampleGroup.afters.forEach(invokeFunctionWithArgsIfArityMatches(exampleGroup));
+      
+      if (exampleGroup.parent) {
+        runAfters(exampleGroup.parent);
+      }
+    }
+ 
+    // TODO check what the least-surprising thing is regarding order of running afterAlls
+    protected function runAfterAlls(exampleGroup:ExampleGroup):void {
+      
+      exampleGroup.afterAlls.forEach(invokeFunctionWithArgsIfArityMatches(exampleGroup));
     }
   }
 }

@@ -1,4 +1,4 @@
-package spec.framework
+package spectacular.framework
 {
   public class ExampleGroup extends Example
   {
@@ -35,6 +35,16 @@ package spec.framework
     public function get examples():Array
     {
       return _examples;
+    }
+    
+    public function get pendingExamples():Array {
+      
+      return _examples.filter(isPendingExample);
+    }
+    
+    protected function isPendingExample(example:Example, i:int = 0, a:Array = null):Boolean {
+      
+      return example.isPending;
     }
     
     public function get beforeAlls():Array 

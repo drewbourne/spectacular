@@ -1,52 +1,60 @@
 package
 {
-  import flash.display.*;
-  import flash.events.*;
+  import flash.display.Sprite;
+  import flash.utils.setTimeout;
+  import spectacular.framework.Spec;
+  import spectacular.framework.SpecRunner;
+  import spectacular.framework.TraceSpecReporter;
   
   public class SpectacularExample extends Sprite {
     
+    private var runner:SpecRunner;
+    
     public function SpectacularExample() {
+      
       super();
+      
+      runner = new SpecRunnerBase(new TraceSpecReporter());
+
+      setTimeout(function():void {
+        runner.run(Spec.spec.currentExampleGroup);
+      }, 1000);
     }
   }
 }
 
-import flash.utils.*;
-import spec.framework.*;
-
-trace('\n---------\n');
-
-// spec.framework
-internal var runner:SpecRunner = new SpecRunner(Spec.spec, new TraceSpecReporter());
-
-// setup the runner to run later
-setTimeout(function():void {
-  runner.run(Spec.spec.currentExampleGroup);
-}, 1000);
-
-// spec.dsl
-import spec.dsl.*;
-import org.hamcrest.*;
-
-/*include 'SpecsAsyncSpecs.as'*/
-include 'ArrayMethodsSpecs.as'
-/*include 'FunctionMethodsSpecs.as'*/
-/*include 'NumberMethodsSpecs.as'*/
-/*include 'ObjectMethodsSpecs.as'*/
-/*include 'StringMethodsSpecs.as'*/
-
-/*describe('StringTable', function():void {
-  it('should be awesome', function():void {
+public class SpectacularSpecs extends SpecRunnerBase {
+  
+  public function SpectacularSpecs() {
+    super();
     
-    var fields:Array = ['Total Example Groups', 'Total Examples', 'Failures'];
-    var fieldLengths:Array = ArrayMethods.pluck(fields, 'length');
-    var max:Number = Math.max.apply(null, fieldLengths);
+    // Public API Specifications
+    DslSpecs();
     
-    var table:Array = (fields.map(function(field:String, i:int, a:Array):String {
-      return StringMethods.padLeft(field, max);
-    }));
+    // Implementation Specifications
+    ExampleSpecs();
+    ExampleGroupSpecs();
+    SpecSpecs();
+    TraceSpecReporterSpecs();
+    SpecRunnerSpecs();
     
-    trace(table.join('\n'));
-    
-  });
-});*/
+    run();
+  }
+}
+
+/*
+<SpecRunnerMxml
+  xmlns="spectacular.mxml.*"
+  xmlns:mx="http://www.adobe.com/2006/mxml">
+  
+  <!-- fail idea -->
+  <ExampleGroup>
+    <description>...</description>
+    <mx:Script><![CDATA[
+      function()
+      
+    ]]></mx:Script>
+  </ExampleGroup>
+  
+</SpecRunnerMxml>
+*/

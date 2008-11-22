@@ -1,4 +1,4 @@
-package spec.framework
+package spectacular.framework
 {
   import flash.utils.setTimeout;
   import flash.utils.clearTimeout;
@@ -16,7 +16,7 @@ package spec.framework
       return _spec;
     }
     
-    public static function set spec(spec:Spec):void 
+    public static function set spec(spec:Spec):void
     {
       _spec = spec;
     }
@@ -63,18 +63,11 @@ package spec.framework
     private var _pendingExamples:Array;
     private var _previousExampleGroups:Array;
     
-    public var results:Object = {
-      exampleGroupCount: 0
-    , exampleCount: 0
-    , passedCount: 0
-    , failedCount: 0
-    };
-    
-    public function Spec()
+    public function Spec(exampleGroup:ExampleGroup = null)
     {
       _pendingExamples = [];
       _previousExampleGroups = [];
-      _currentExampleGroup = new ExampleGroup(null, null, 'root', null);
+      _currentExampleGroup = exampleGroup || new ExampleGroup(null, null, 'root', null);
     }
     
     public function get currentExampleGroup():ExampleGroup 
@@ -143,6 +136,10 @@ package spec.framework
     
     public function addAsync(fn:Function, failAfter:Number):Function
     {
+      // TODO move this implementation to the BaseSpecRunner
+      // TODO just assign failAfter ms, and fn to asyncDetails
+      // TODO formalize asyncDetails object
+      
       var asyncDetails:Object;
 
       var failTimeout:int = setTimeout(function():void {

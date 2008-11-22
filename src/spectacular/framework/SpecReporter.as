@@ -1,4 +1,4 @@
-package spec.framework
+package spectacular.framework
 {
   public interface SpecReporter
   {
