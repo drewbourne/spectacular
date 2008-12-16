@@ -5,14 +5,13 @@ package spectacular.framework
     private var _parent         :ExampleGroup;
     private var _description    :String;
     private var _implementation :Function;
-    private var _expectations   :Array;
     private var _asyncs         :Array;
-    private var _state          :ExampleState = ExampleState.PENDING;
+    private var _state          :ExampleState;
     
     public function Example(parent:ExampleGroup, description:String, implementation:Function)
     {
-      _expectations = [];
       _asyncs = [];
+      _state = ExampleState.PENDING;
       
       _parent = parent;
       _description = description;
@@ -39,11 +38,6 @@ package spectacular.framework
       return _implementation;
     }
     
-    public function get expectations():Array 
-    {
-      return _expectations;
-    }
-    
     public function get asyncs():Array
     {
       return _asyncs;
@@ -62,6 +56,17 @@ package spectacular.framework
     public function addAsync(asyncDetails:Object):void
     {
       asyncs.push(asyncDetails);
+    }
+    
+    public function run():void {
+      
+      _state = ExampleState.RUNNING;
+      implementation();
+    }
+    
+    public function completed():void {
+      
+      _state = ExampleState.COMPLETED;
     }
     
     public function get isPending():Boolean {

@@ -57,10 +57,9 @@ package spectacular.framework
 
       // run the implementation closure to trigger asyncs && assertions/expects/shoulds/matchers/what-have-you
       spec.currentExample = example;
-      example.state = ExampleState.RUNNING;
       
       try {
-        example.implementation();
+        example.run();
       } catch (error:Error) {
         reporter.failure(error);
       }
@@ -83,8 +82,7 @@ package spectacular.framework
         
         // TODO complain if any of the asyncs failed to be called
         // TODO flag example as state == FAILED if it failed for any reason
-        
-        example.state = ExampleState.COMPLETED;
+        example.completed();
         
         // run the afters for this example, and up the parent heirarchy
         runAfters(example.parent);
@@ -115,8 +113,15 @@ package spectacular.framework
       // note: not all example groups will have an implementation, especially in the case of the root spec
       if (exampleGroup.implementation is Function)
       {
-        exampleGroup.state = ExampleState.RUNNING;
-        exampleGroup.implementation();
+        // exampleGroup.state = ExampleState.RUNNING;
+        // exampleGroup.implementation();
+        try {
+          exampleGroup.run();
+        } catch (error:Error) {
+          // TODO put a better error description / helper text here
+          trace('NOTE: the following error could well be because you are making assertions inside a describe() function instead of inside an it(). In the future some better handling will be added for this case.');
+          throw error;
+        }
       }
     
       // we should now have some example in the current example group

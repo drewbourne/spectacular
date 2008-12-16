@@ -1,4 +1,4 @@
-mxmlc specs/SpectacularExample.as \
+mxmlc specs/SpectacularSpecs.as \
  -sp src \
  -sp ../hamcrest-as3/core/src \
  -sp ../hamcrest-as3/factories/src \

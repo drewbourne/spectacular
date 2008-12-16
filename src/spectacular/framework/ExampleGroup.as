@@ -7,19 +7,18 @@ package spectacular.framework
     private var _befores      :Array;
     private var _afters       :Array;
     private var _afterAlls    :Array;
-    private var _type:Class;
+    private var _type         :Class;
     
     public function ExampleGroup(parent:ExampleGroup, type:Class, description:String, implementation:Function)
     {
       super(parent, description, implementation);
       
-      _examples      = [];
-      _beforeAlls    = [];
-      _befores       = [];
-      _afters        = [];
-      _afterAlls     = [];
-      
-      _type = type;
+      _examples     = [];
+      _beforeAlls   = [];
+      _befores      = [];
+      _afters       = [];
+      _afterAlls    = [];
+      _type         = type;
     }
     
     override public function toString():String

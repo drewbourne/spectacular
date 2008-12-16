@@ -143,8 +143,6 @@ package spectacular.framework
       var asyncDetails:Object;
 
       var failTimeout:int = setTimeout(function():void {
-        //spec.asyncs.splice(spec.asyncs.indexOf(asyncDetails), 1);
-        
         throw new Error("async not called: "+ currentExample.description);
       }, failAfter);
 
@@ -153,7 +151,6 @@ package spectacular.framework
 
       return function(...rest):void {
         clearTimeout(failTimeout);
-        //spec.asyncs.splice(spec.asyncs.indexOf(asyncDetails), 1);
         fn.apply(null, rest);
       };
     }

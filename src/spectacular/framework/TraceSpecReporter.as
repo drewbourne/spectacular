@@ -54,7 +54,7 @@ package spectacular.framework
     public function failure(cause:Error):void
     {
       _failures.push(cause);
-      trace(cause.getStackTrace());
+      trace(makeNiceStackTrace(cause.getStackTrace()));
     }
   }
 }
@@ -64,4 +64,27 @@ internal function repeat(value:String, count:Number = 1):String {
   var out:String = '';
   while(count > 0){ out += value; --count; }
   return out;
+}
+
+internal function makeNiceStackTrace(lines:String):String {
+  
+  return lines.split('\n')
+    .filter(includeLineInStackTrace)
+    .map(cleanLineOfUnnecesssaryPaths)
+    .join('\n');
+}
+
+internal function includeLineInStackTrace(line:String, i:int, a:Array):Boolean {
+  
+  return true;
+}
+
+internal var packageAndClassPattern    :RegExp = /([\w]+)(.[\w]+)::([\w]+)/i;
+internal var namespaceAndFunctionPattern  :RegExp = /([\w]+)\/([\w\:.]+)::([\w]+)/i;
+internal var anonymousFunctionPattern     :RegExp = /<anonymous>/;
+internal var filePathAndLineNumberPattern :RegExp = /\[([\w\/\.-]+:(\d+))\]/i;
+
+internal function cleanLineOfUnnecesssaryPaths(line:String, i:int, a:Array):String {
+
+  return line;
 }
