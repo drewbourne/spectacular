@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Application 
+  xmlns:mx="http://www.adobe.com/2006/mxml"
+  xmlns:view="com.anywebcam.project.broadcaster.view.*" 
+  layout="relative"
+  width="100%" height="400"
+  horizontal
+  >
+  
+  <mx:Panel id=""
+    width="100%"
+    height="100%">
+    
+    <mx:TabNavigator id="tabsContainer"
+      width="100%"
+      height="100%">
+    
+      <mx:VBox id="specificationsContainer"
+        label="Specifications">
+        
+      </mx:VBox>
+    
+    </mx:TabNavigator>
+    
+  </mx:Panel>
+  
+</mx:Application>
