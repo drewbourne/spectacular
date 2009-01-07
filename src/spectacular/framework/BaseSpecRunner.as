@@ -198,6 +198,10 @@ package spectacular.framework
     // TODO check what the least-surprising thing is regarding order of running befores, it should probably run outside-in
     protected function runBefores(exampleGroup:ExampleGroup):void {
       
+      // unfold up the heirachy collecting before functions
+      // reverse the order?
+      // run the befores
+      
       exampleGroup.befores.forEach(invokeFunctionWithArgsIfArityMatches(exampleGroup));
       
       if (exampleGroup.parent) {

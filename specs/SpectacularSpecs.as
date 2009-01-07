@@ -2,21 +2,21 @@ package
 {
   import flash.display.Sprite;
   import flash.utils.setTimeout;
+  
+  import spectacular.framework.ExampleSpecs;  
+  import spectacular.framework.Spec;
   import spectacular.framework.SpectacularSpecRunner;
   
+  [SWF(backgroundColor="#F0F0F0")]
   public class SpectacularSpecs extends SpectacularSpecRunner {
     
     public function SpectacularSpecs() {
       
       super();
       
-      trace('SpectacularSpecs', spectacular.framework.root);
+      ExampleSpecs();
       
-      spectacular.framework.root = true;
-      
-      trace('SpectacularSpecs', spectacular.framework.root);
-      
-      // run(null);
+      run(Spec.root);
     }
   }
 }

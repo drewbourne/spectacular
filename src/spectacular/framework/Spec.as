@@ -7,6 +7,10 @@ package spectacular.framework
   {
     private static var _spec:Spec;
     
+    public static function get root():Example {
+      return spec.rootExampleGroup;
+    }
+    
     public static function get spec():Spec
     {
       if (!_spec) 
@@ -51,13 +55,14 @@ package spectacular.framework
       spec.addAfterAll(fn);
     }
     
-    public static function addAsync(fn:Function, failAfter:Number):Function
+    public static function addAsync(fn:Function, failAfter:Number, failFn:Function = null):Function
     {
-      return spec.addAsync(fn, failAfter);
+      return spec.addAsync(fn, failAfter, failFn);
     }
     
     // TODO separate the statics and the Spec impl into different classes
     
+    private var _rootExampleGroup:ExampleGroup;
     private var _currentExampleGroup:ExampleGroup;
     private var _currentExample:Example;
     private var _pendingExamples:Array;
@@ -67,7 +72,12 @@ package spectacular.framework
     {
       _pendingExamples = [];
       _previousExampleGroups = [];
-      _currentExampleGroup = exampleGroup || new ExampleGroup(null, null, 'root', null);
+      _rootExampleGroup = exampleGroup || new ExampleGroup(null, null, 'root', null);
+      _currentExampleGroup = _rootExampleGroup;
+    }
+    
+    public function get rootExampleGroup():Example {
+      return _rootExampleGroup;
     }
     
     public function get currentExampleGroup():ExampleGroup 
@@ -134,7 +144,7 @@ package spectacular.framework
       currentExampleGroup.addAfterAll(fn);
     }
     
-    public function addAsync(fn:Function, failAfter:Number):Function
+    public function addAsync(fn:Function, failAfter:Number, failFn:Function = null):Function
     {
       // TODO move this implementation to the BaseSpecRunner
       // TODO just assign failAfter ms, and fn to asyncDetails
@@ -142,7 +152,7 @@ package spectacular.framework
       
       var asyncDetails:Object;
 
-      var failTimeout:int = setTimeout(function():void {
+      var failTimeout:int = setTimeout(failFn || function():void {
         throw new Error("async not called: "+ currentExample.description);
       }, failAfter);
 

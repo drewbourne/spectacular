@@ -6,7 +6,11 @@ package spectacular.dsl {
   public function SpecsAsyncSpecs():void {
     
     describe('Async Example', function():void {
-      var ed:EventDispatcher = new EventDispatcher();
+      var ed:EventDispatcher;
+      
+      before(function():void {
+        ed = new EventDispatcher();
+      });
 
       it('should wait before running next example', function():void {
         var later:Function = async(function():void {

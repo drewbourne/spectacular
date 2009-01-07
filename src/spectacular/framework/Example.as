@@ -1,5 +1,7 @@
 package spectacular.framework
 {
+  import flash.errors.IllegalOperationError;
+  
   public class Example
   {
     private var _parent         :ExampleGroup;
@@ -48,40 +50,48 @@ package spectacular.framework
       return _state;
     }
     
-    public function set state(state:ExampleState):void 
-    {
-      _state = state;
+    public function get isPending():Boolean 
+    {  
+      return ExampleState.PENDING.equals(state);
     }
- 
+    
+    public function get isRunning():Boolean 
+    {  
+      return ExampleState.RUNNING.equals(state);
+    }
+    
+    public function get isCompleted():Boolean 
+    {  
+      return ExampleState.COMPLETED.equals(state);
+    }
+    
     public function addAsync(asyncDetails:Object):void
     {
       asyncs.push(asyncDetails);
     }
     
-    public function run():void {
-      
+    public function run():void 
+    {  
       _state = ExampleState.RUNNING;
       implementation();
     }
     
-    public function completed():void {
-      
+    public function completed():void 
+    {  
       _state = ExampleState.COMPLETED;
     }
     
-    public function get isPending():Boolean {
+    /**
+     * Resets the Example ready to be run/rerun
+     */
+    public function reset():void 
+    {
+      if (isRunning) {
+        throw new IllegalOperationError("Example cannot be reset while running");
+      }
       
-      return ExampleState.PENDING.equals(state);
-    }
-    
-    public function get isRunning():Boolean {
-      
-      return ExampleState.RUNNING.equals(state);
-    }
-    
-    public function get isCompleted():Boolean {
-      
-      return ExampleState.COMPLETED.equals(state);
+      _state = ExampleState.PENDING;
+      _asyncs.splice(0, _asyncs.length);
     }
   }
 }
