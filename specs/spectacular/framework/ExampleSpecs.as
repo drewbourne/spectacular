@@ -32,8 +32,11 @@ package spectacular.framework
       var e:Example;
       
       before(function():void {
-        trace("FIRST BEFORE---------------------------");
         e = createExample();
+      });
+      
+      after(function():void {
+        trace('FIRST');
       });
       
       describe("properties", function():void {
@@ -98,8 +101,13 @@ package spectacular.framework
       
       describe("a completed Example", function():void {
         before(function():void {
-          trace("COMPLETE BEFORE---------------------------");
           e.completed();
+        });
+        after(function():void {
+          trace('SECOND');
+        });
+        after(function():void {
+          trace('THIRD');
         });
         
         it("should not be pending", function():void {

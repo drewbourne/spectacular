@@ -1,5 +1,7 @@
 package spectacular.framework
 {
+  import asx.ArrayMethods;
+  
   import flash.utils.*;
   
   public class BaseSpecRunner implements SpecRunner
@@ -84,7 +86,7 @@ package spectacular.framework
         // TODO flag example as state == FAILED if it failed for any reason
         example.completed();
         
-        // run the afters for this example, and up the parent heirarchy
+        // run the afters for this example, and up the parent hierarchy
         runAfters(example.parent);
         
         // notify the report that we have finished an example
@@ -115,9 +117,12 @@ package spectacular.framework
       {
         // exampleGroup.state = ExampleState.RUNNING;
         // exampleGroup.implementation();
-        try {
+        try 
+        {
           exampleGroup.run();
-        } catch (error:Error) {
+        } 
+        catch (error:Error) 
+        {
           // TODO put a better error description / helper text here
           trace('NOTE: the following error could well be because you are making assertions inside a describe() function instead of inside an it(). In the future some better handling will be added for this case.');
           throw error;
@@ -158,7 +163,8 @@ package spectacular.framework
       if (current.parent)
       {
         // example group is complete now so perform clean up operations
-        if (current is ExampleGroup) {
+        if (current is ExampleGroup) 
+        {
           var exampleGroup:ExampleGroup = current as ExampleGroup;
           
           // we've run out of pending examples so we notify the reporter we have finished with this example group
@@ -181,12 +187,50 @@ package spectacular.framework
     protected function invokeFunctionWithArgsIfArityMatches(...rest):Function {
       
       return function(fn:Function, i:int, a:Array):void {
-        try {
+        try 
+        {
           fn.apply(null, rest && fn.length == rest.length ? rest : []);
-        } catch (error:Error) {
+        } 
+        catch (error:Error) 
+        {
           reporter.failure(error);
         }
       };
+    }
+    
+    protected function pluckFromExampleGroupHierarchy(exampleGroup:ExampleGroup, field:String):Array {
+      return ArrayMethods.unfold(
+        exampleGroup, 
+        exampleGroupParentIsNotNull,
+        FunctionMethods.curry(ArrayMethods.pluck, undefined, field),
+        FunctionMethods.curry(ArrayMethods.pluck, undefined, 'parent')
+      );
+        
+      /*
+      // package asx { 
+      //  public const all:AllMethods = new AllMethods();
+      // }
+      with (asx.all) {
+        
+      }
+      
+      // package asx {
+      //  public const array:ArrayMethods = new ArrayMethods();
+      // }      
+      with (asx.array) {
+        zip(entress, mains, desserts)
+      }
+      
+      return unfold(
+        exampleGroup, 
+        sequence(notNullValue().matches, curry(pluck, _, 'parent')),
+        curry(pluck, _, field),
+        curry(pluck, _, 'parent')
+        );*/
+    };
+    
+    protected function exampleGroupParentIsNotNull(exampleGroup:ExampleGroup):void {
+      return exampleGroup.parent != null;
     }
     
     // TODO check what the least-surprising thing is regarding order of running beforeAlls
@@ -195,28 +239,46 @@ package spectacular.framework
       exampleGroup.beforeAlls.forEach(invokeFunctionWithArgsIfArityMatches(exampleGroup));
     }
     
-    // TODO check what the least-surprising thing is regarding order of running befores, it should probably run outside-in
+    // TODO check what the least-surprising thing is regarding order of running befores, it should probably run outside-in first defined to last.
     protected function runBefores(exampleGroup:ExampleGroup):void {
       
-      // unfold up the heirachy collecting before functions
+      // unfold up the hierachy collecting before functions
       // reverse the order?
       // run the befores
+      var befores:Array = ArrayMethods.unfold(
+        exampleGroup, 
+        function(exampleGroup:ExampleGroup):Boolean {
+          return exampleGroup.parent != null;
+        },
+        function(exampleGroup:ExampleGroup):Array {
+          return exampleGroup.befores.slice(0).reverse();
+        },
+        function(exampleGroup:ExampleGroup):ExampleGroup {
+          return exampleGroup.parent;
+        });
       
-      exampleGroup.befores.forEach(invokeFunctionWithArgsIfArityMatches(exampleGroup));
-      
-      if (exampleGroup.parent) {
-        runBefores(exampleGroup.parent);
-      }
+      ArrayMethods.flatten(befores).reverse().forEach(invokeFunctionWithArgsIfArityMatches(exampleGroup));
     }
     
-    // TODO check what the least-surprising thing is regarding order of running afters, it should probabaly run inside-out
+    // TODO check what the least-surprising thing is regarding order of running afters, it should probabaly run inside-out, last defined to first.
     protected function runAfters(exampleGroup:ExampleGroup):void {
       
-      exampleGroup.afters.forEach(invokeFunctionWithArgsIfArityMatches(exampleGroup));
+      // unfold up the heirarchy collecting after functions
+      // inner order
+      // run the afters
+      var afters:Array = ArrayMethods.unfold(
+        exampleGroup, 
+        function(exampleGroup:ExampleGroup):Boolean {
+          return exampleGroup.parent != null;
+        },
+        function(exampleGroup:ExampleGroup):Array {
+          return exampleGroup.afters.slice(0).reverse();
+        },
+        function(exampleGroup:ExampleGroup):ExampleGroup {
+          return exampleGroup.parent;
+        });
       
-      if (exampleGroup.parent) {
-        runAfters(exampleGroup.parent);
-      }
+      ArrayMethods.flatten(afters).forEach(invokeFunctionWithArgsIfArityMatches(exampleGroup));
     }
  
     // TODO check what the least-surprising thing is regarding order of running afterAlls
