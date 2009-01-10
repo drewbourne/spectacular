@@ -201,90 +201,55 @@ package spectacular.framework
     protected function pluckFromExampleGroupHierarchy(exampleGroup:ExampleGroup, field:String):Array {
       return ArrayMethods.unfold(
         exampleGroup, 
-        exampleGroupParentIsNotNull,
-        FunctionMethods.curry(ArrayMethods.pluck, undefined, field),
-        FunctionMethods.curry(ArrayMethods.pluck, undefined, 'parent')
+        exampleGroupAndParentIsNotNull,
+        function(exampleGroup:ExampleGroup):Array {
+          return (exampleGroup[field] as Array).slice(0).reverse();
+        },
+        exampleGroupParent
       );
-        
-      /*
-      // package asx { 
-      //  public const all:AllMethods = new AllMethods();
-      // }
-      with (asx.all) {
-        
-      }
-      
-      // package asx {
-      //  public const array:ArrayMethods = new ArrayMethods();
-      // }      
-      with (asx.array) {
-        zip(entress, mains, desserts)
-      }
-      
-      return unfold(
-        exampleGroup, 
-        sequence(notNullValue().matches, curry(pluck, _, 'parent')),
-        curry(pluck, _, field),
-        curry(pluck, _, 'parent')
-        );*/
-    };
-    
-    protected function exampleGroupParentIsNotNull(exampleGroup:ExampleGroup):void {
-      return exampleGroup.parent != null;
     }
     
-    // TODO check what the least-surprising thing is regarding order of running beforeAlls
+    protected function exampleGroupAndParentIsNotNull(exampleGroup:ExampleGroup):Boolean {
+      return exampleGroup && exampleGroup.parent != null;
+    }
+    
+    protected function exampleGroupParent(exampleGroup:ExampleGroup):ExampleGroup {
+      return exampleGroup.parent;
+    }
+    
     protected function runBeforeAlls(exampleGroup:ExampleGroup):void {
       
-      exampleGroup.beforeAlls.forEach(invokeFunctionWithArgsIfArityMatches(exampleGroup));
+      ArrayMethods.flatten(pluckFromExampleGroupHierarchy(exampleGroup, 'beforeAlls'))
+        .reverse()
+        .forEach(invokeFunctionWithArgsIfArityMatches(exampleGroup));      
     }
     
     // TODO check what the least-surprising thing is regarding order of running befores, it should probably run outside-in first defined to last.
     protected function runBefores(exampleGroup:ExampleGroup):void {
       
       // unfold up the hierachy collecting before functions
-      // reverse the order?
+      // reverse the order as we run first defined to last for each nested ExampleGroup
       // run the befores
-      var befores:Array = ArrayMethods.unfold(
-        exampleGroup, 
-        function(exampleGroup:ExampleGroup):Boolean {
-          return exampleGroup.parent != null;
-        },
-        function(exampleGroup:ExampleGroup):Array {
-          return exampleGroup.befores.slice(0).reverse();
-        },
-        function(exampleGroup:ExampleGroup):ExampleGroup {
-          return exampleGroup.parent;
-        });
-      
-      ArrayMethods.flatten(befores).reverse().forEach(invokeFunctionWithArgsIfArityMatches(exampleGroup));
+      ArrayMethods.flatten(pluckFromExampleGroupHierarchy(exampleGroup, 'befores'))
+        .reverse()
+        .forEach(invokeFunctionWithArgsIfArityMatches(exampleGroup));
     }
     
     // TODO check what the least-surprising thing is regarding order of running afters, it should probabaly run inside-out, last defined to first.
     protected function runAfters(exampleGroup:ExampleGroup):void {
       
       // unfold up the heirarchy collecting after functions
-      // inner order
+      // keep the order as we run last defined to first for each nested ExampleGroup
       // run the afters
-      var afters:Array = ArrayMethods.unfold(
-        exampleGroup, 
-        function(exampleGroup:ExampleGroup):Boolean {
-          return exampleGroup.parent != null;
-        },
-        function(exampleGroup:ExampleGroup):Array {
-          return exampleGroup.afters.slice(0).reverse();
-        },
-        function(exampleGroup:ExampleGroup):ExampleGroup {
-          return exampleGroup.parent;
-        });
-      
-      ArrayMethods.flatten(afters).forEach(invokeFunctionWithArgsIfArityMatches(exampleGroup));
+      ArrayMethods.flatten(pluckFromExampleGroupHierarchy(exampleGroup, 'afters'))
+        .forEach(invokeFunctionWithArgsIfArityMatches(exampleGroup));
     }
  
     // TODO check what the least-surprising thing is regarding order of running afterAlls
     protected function runAfterAlls(exampleGroup:ExampleGroup):void {
       
-      exampleGroup.afterAlls.forEach(invokeFunctionWithArgsIfArityMatches(exampleGroup));
+      ArrayMethods.flatten(pluckFromExampleGroupHierarchy(exampleGroup, 'afterAlls'))
+        .forEach(invokeFunctionWithArgsIfArityMatches(exampleGroup));
     }
   }
 }

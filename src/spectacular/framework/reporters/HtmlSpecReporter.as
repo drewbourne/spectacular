@@ -1,15 +1,24 @@
-package spectacular.framework
+package spectacular.framework.reporters
 {
-  public class TraceSpecReporter implements SpecReporter
+  import spectacular.framework.*;
+  
+  public class HtmlSpecReporter extends EventDispatcher implements SpecReporter
   {
     private var _nest:int = -1;
     private var _exampleGroupCount:int = 0;
     private var _exampleCount:int = 0;
     private var _failures:Array;
+    private var _html:String;
     
-    public function TraceSpecReporter()
+    public function HtmlSpecReporter()
     {
+      super();
       _failures = [];
+    }
+    
+    [Bindable("htmlChanged")]
+    public function get html():String {
+      return _html;
     }
     
     public function start():void

@@ -35,10 +35,6 @@ package spectacular.framework
         e = createExample();
       });
       
-      after(function():void {
-        trace('FIRST');
-      });
-      
       describe("properties", function():void {
         
       });
@@ -80,13 +76,13 @@ package spectacular.framework
         });
         
         it("should not be pending", function():void {
-          assertThat(e.isPending, equalTo(true));
-          assertThat(e.state, equalTo(ExampleState.PENDING));
+          assertThat(e.isPending, equalTo(false));
+          assertThat(e.state, not(equalTo(ExampleState.PENDING)));
         });
         
         it("should be running", function():void {
-          assertThat(e.isRunning, equalTo(false));
-          assertThat(e.state, not(equalTo(ExampleState.RUNNING)));
+          assertThat(e.isRunning, equalTo(true));
+          assertThat(e.state, equalTo(ExampleState.RUNNING));
         });
         
         it("should not be completed", function():void {
@@ -102,12 +98,6 @@ package spectacular.framework
       describe("a completed Example", function():void {
         before(function():void {
           e.completed();
-        });
-        after(function():void {
-          trace('SECOND');
-        });
-        after(function():void {
-          trace('THIRD');
         });
         
         it("should not be pending", function():void {

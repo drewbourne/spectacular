@@ -1,28 +1,59 @@
 package
 {
-  import flash.display.Sprite;
+  import flash.display.*;
+  import flash.events.Event;
   import flash.utils.setTimeout;
+  import flash.text.TextField;
   
-  import spectacular.framework.ExampleSpecs;  
+  import spectacular.framework.CompositeSpecReporter;
   import spectacular.framework.Spec;
   import spectacular.framework.SpectacularSpecRunner;
+  import spectacular.framework.reporters.TextSpecReporter;
+  import spectacular.framework.reporters.TraceSpecReporter;
+
+  import spectacular.framework.ExampleSpecs;  
+  import spectacular.framework.BaseSpecRunnerSpecs;
+  import spectacular.framework.CompositeSpecReporterSpecs;
   
   [SWF(backgroundColor="#F0F0F0")]
   public class SpectacularSpecs extends SpectacularSpecRunner {
     
+    private var textReporter:TextSpecReporter;
+    private var textField:TextField;
+    
     public function SpectacularSpecs() {
       
-      super();
+      stage.align = StageAlign.TOP_LEFT;
+      stage.scaleMode = StageScaleMode.NO_SCALE;
       
-      ExampleSpecs();
+      var reporter:CompositeSpecReporter = new CompositeSpecReporter();
+      reporter.addReporter(new TraceSpecReporter());
+      reporter.addReporter(textReporter = new TextSpecReporter());
+
+      textReporter.addEventListener("textChanged", function(event:Event):void {
+        textField.text = textReporter.text;
+      });
       
-      run(Spec.root);
+      textField = new TextField();
+      addChild(textField);
+
+      super(reporter);
+      
+      setTimeout(function():void {
+        textField.width = stage.stageWidth;
+        textField.height = stage.stageHeight;
+
+        ExampleSpecs();
+        BaseSpecRunnerSpecs();
+        CompositeSpecReporterSpecs();
+
+        run(Spec.root);        
+      }, 100);
     }
   }
 }
 
 /*
-
 // clean, direct, win
 public class ProjectSpecs extends SpectacularSpecRunner {
   

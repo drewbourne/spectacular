@@ -2,6 +2,8 @@ package spectacular.framework {
   
   import flash.display.*;
   
+  import spectacular.framework.reporters.*;
+  
   public class SpectacularSpecRunner extends Sprite implements SpecRunner {
     
     private var _runner:SpecRunner;
