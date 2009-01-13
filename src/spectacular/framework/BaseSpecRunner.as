@@ -224,7 +224,6 @@ package spectacular.framework
         .forEach(invokeFunctionWithArgsIfArityMatches(exampleGroup));      
     }
     
-    // TODO check what the least-surprising thing is regarding order of running befores, it should probably run outside-in first defined to last.
     protected function runBefores(exampleGroup:ExampleGroup):void {
       
       // unfold up the hierachy collecting before functions
@@ -235,7 +234,6 @@ package spectacular.framework
         .forEach(invokeFunctionWithArgsIfArityMatches(exampleGroup));
     }
     
-    // TODO check what the least-surprising thing is regarding order of running afters, it should probabaly run inside-out, last defined to first.
     protected function runAfters(exampleGroup:ExampleGroup):void {
       
       // unfold up the heirarchy collecting after functions
@@ -245,7 +243,6 @@ package spectacular.framework
         .forEach(invokeFunctionWithArgsIfArityMatches(exampleGroup));
     }
  
-    // TODO check what the least-surprising thing is regarding order of running afterAlls
     protected function runAfterAlls(exampleGroup:ExampleGroup):void {
       
       ArrayMethods.flatten(pluckFromExampleGroupHierarchy(exampleGroup, 'afterAlls'))
