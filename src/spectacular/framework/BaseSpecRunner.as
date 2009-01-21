@@ -60,10 +60,16 @@ package spectacular.framework
       // run the implementation closure to trigger asyncs && assertions/expects/shoulds/matchers/what-have-you
       spec.currentExample = example;
       
-      try {
-        example.run();
-      } catch (error:Error) {
-        reporter.failure(error);
+      // not all example will have an implementation
+      // for example: it('is just descriptive');
+      // we should perhaps indicate to the reporter that the example group has no implementation
+      if (example.implementation is Function) {
+        try {
+          example.run();
+        } 
+        catch (error:Error) {
+          reporter.failure(error);
+        }
       }
     
       // get the async()s after this example runs

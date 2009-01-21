@@ -29,16 +29,17 @@ package spectacular.framework.reporters {
     }
     
     public function end():void {
-      appendLine('\nDone');
-      appendLine('\tTotal Example Groups:', _exampleGroupCount);
-      appendLine('\tTotal Examples:', _exampleCount);
-      appendLine('\tFailures:', _failures.length);
+      appendLine('');
+      appendLine('Done');
+      appendLine('Total Example Groups:', _exampleGroupCount);
+      appendLine('Total Examples:', _exampleCount);
+      appendLine('Failures:', _failures.length);
     }
     
     public function startExample(example:Example):void {
       _nest++;
       _exampleCount++;
-      var out:String = repeat('  ', _nest) + example.description;
+      var out:String = example.description;
       appendLine(out);
     }
     
@@ -49,7 +50,7 @@ package spectacular.framework.reporters {
     public function startExampleGroup(exampleGroup:ExampleGroup):void {
       _nest++;
       _exampleGroupCount++;
-      var out:String = repeat('  ', _nest) + exampleGroup.description;
+      var out:String = exampleGroup.description;
       appendLine(out);
     }
     
@@ -59,12 +60,19 @@ package spectacular.framework.reporters {
     
     public function failure(cause:Error):void {
       _failures.push(cause);
-      appendLine(makeNiceStackTrace(cause.getStackTrace()));
+      
+      _nest++;
+      if (cause && cause.message) {
+        cause.message.split('\n').forEach(function(line:String, i:int, a:Array):void {
+          appendLine(line);
+        });
+      }
+      _nest--;
     }
     
     // text methods
     protected function appendLine(...strings):void {
-      _text += strings.join(' ') + "\n";
+      _text += repeat('  ', _nest) + strings.join(' ') + "\n";
       dispatchEvent(new Event("textChanged"));
     }
   }
