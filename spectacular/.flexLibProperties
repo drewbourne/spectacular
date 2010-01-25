@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<flexLibProperties version="1">
+  <includeClasses>
+    <classEntry path="spectacular.after"/>
+    <classEntry path="spectacular.internals.Async"/>
+    <classEntry path="spectacular.errors.SyntaxError"/>
+    <classEntry path="spectacular.runners.SpectacularRunner2"/>
+    <classEntry path="spectacular.internals.SpectacularContext"/>
+    <classEntry path="spectacular.it"/>
+    <classEntry path="spectacular.async"/>
+    <classEntry path="spectacular.errors.SpectacularError"/>
+    <classEntry path="spectacular.runners.SpectacularRunner"/>
+    <classEntry path="spectacular.describe"/>
+    <classEntry path="spectacular.internals.Context"/>
+    <classEntry path="spectacular.listeners.SpectacularRunListener"/>
+    <classEntry path="spectacular.before"/>
+    <classEntry path="spectacular.internals.Example"/>
+  </includeClasses>
+  <includeResources/>
+  <namespaceManifests/>
+</flexLibProperties>
